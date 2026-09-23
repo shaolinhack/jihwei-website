@@ -338,6 +338,32 @@ async function main() {
     await cp(contentAssets, path.join(OUT_DIR, 'assets'), { recursive: true });
   }
 
+  // 3b. 網站根目錄的圖示
+  //
+  // favicon.ico 與 apple-touch-icon.png 必須落在網站「根目錄」：沒有 <link>
+  // 指示時，瀏覽器會直接去要 /favicon.ico，iOS 加到主畫面則會去要
+  // /apple-touch-icon.png。放在 /assets/ 底下它們永遠找不到。
+  //
+  // 這些檔案放在專案根目錄（跟 README 同一層），這裡明列要複製哪幾個 ——
+  // 用白名單而不是整個目錄掃描，免得哪天根目錄多了 .env 之類的東西也被送上線。
+  //
+  // ⚠️ 圖示必須是「正方形、而且底色撐得住」。2026-09-23 之前 site.favicon 指向
+  //    站徽（563x209 的寬橫幅、白字透明底），在淺色書籤列上等於隱形 ——
+  //    白字配白底。換成方形白底黑字的商標版才看得見。
+  const ROOT_FILES = [
+    'favicon.ico',
+    'favicon-16x16.png',
+    'favicon-32x32.png',
+    'favicon-48x48.png',
+    'apple-touch-icon.png',
+    'android-chrome-192x192.png',
+    'android-chrome-512x512.png',
+  ];
+  for (const name of ROOT_FILES) {
+    const from = path.join(ROOT, name);
+    if (existsSync(from)) await cp(from, path.join(OUT_DIR, name));
+  }
+
   // 4. 兜底：完全沒內容時給佔位頁
   const indexPath = path.join(OUT_DIR, 'index.html');
   if (!existsSync(indexPath)) {
