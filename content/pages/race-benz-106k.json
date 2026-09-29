@@ -1,0 +1,77 @@
+{
+  "title": "汽車發明 140 週年 線上三鐵挑戰賽 106K",
+  "description": "2026 年 9 月 28 日完賽。Swim 1K、Bike 90K、Run 15K，總時間 08:31:33。蘿蔔先生（李日韋）的第三場三鐵，也是第一次跑到 106 公里。",
+  "route": "/race/benz-106k",
+  "blocks": [
+    {
+      "type": "prose",
+      "eyebrow": "2026.09.28 完賽",
+      "level": 1,
+      "title": "106 KM of Courage",
+      "body": [
+        "汽車發明 140 週年線上三鐵挑戰賽 —— Swim 1km、Bike 90km、Run 15km，加起來 106 公里。",
+        "**總時間 08:31:33。**"
+      ],
+      "actions": [
+        {
+          "label": "← 回首頁",
+          "href": "/"
+        }
+      ]
+    },
+    {
+      "type": "cards",
+      "title": "分段成績",
+      "items": [
+        {
+          "meta": "SWIM　1 km",
+          "title": "00:26:48"
+        },
+        {
+          "meta": "BIKE　90 km",
+          "title": "05:59:40"
+        },
+        {
+          "meta": "RUN　15 km",
+          "title": "02:05:04"
+        },
+        {
+          "meta": "TOTAL　106 km",
+          "title": "08:31:33",
+          "highlight": true
+        }
+      ]
+    },
+    {
+      "type": "split",
+      "eyebrow": "紀錄",
+      "title": "完賽成績證明",
+      "body": [
+        "FINISHER　李日韋 / M35",
+        "Swim 00:26:48　·　Bike 05:59:40　·　Run 02:05:04",
+        "**TOTAL TIME 08:31:33**"
+      ],
+      "image": {
+        "src": "/assets/races/benz-106k-certificate.jpg",
+        "alt": "完賽成績證明：李日韋 M35，Swim 00:26:48、Bike 05:59:40、Run 02:05:04，總時間 08:31:33",
+        "width": 1200,
+        "height": 1698
+      }
+    },
+    {
+      "type": "split",
+      "mediaPosition": "right",
+      "title": "完賽頁面",
+      "body": [
+        "「恭喜你成功征服 106 公里傳奇之旅！勇敢跨出第一步，就能走得更遠。」",
+        "汽車發明 140 週年紀念賽事，Swim 1km · Bike 90km · Run 15km。"
+      ],
+      "image": {
+        "src": "/assets/races/benz-106k-finish.jpg",
+        "alt": "106 KM of Courage 完賽海報",
+        "width": 1200,
+        "height": 1761
+      }
+    }
+  ]
+}
