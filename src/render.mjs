@@ -1015,7 +1015,18 @@ export function renderPage({ site, page }) {
     page.image && `<meta property="og:image" content="${escapeHtml(page.image)}">`,
     '<meta name="twitter:card" content="summary_large_image">',
     `<link rel="stylesheet" href="${escapeHtml(site.stylesheet ?? '/assets/styles.css')}">`,
+    // 2026-09-28：舊版只宣告這一個 32×32 的圖示。Safari 的書籤磚需要大圖，
+    //   拿不到就退回「J」那種字母方塊 —— Robert 的原話是「又跑掉了」：
+    //   圖示快取被清掉之後 Safari 沒有別的可以用，所以會反覆消失。
+    //   同一支手機上的對照組 hpxkh.com 宣告了五個（含 apple-touch-icon 180×180），一直都正常。
+    // ⚠️ 這些檔案本來就在網站根目錄（build.mjs 的 ROOT_FILES 白名單會複製），這裡只是把它們宣告出來。
+    // ⚠️ 換圖之後要改 site.json 的 favicon 後面那個 ?v=，否則 Safari 會一直吃舊的。
     site.favicon && `<link rel="icon" href="${escapeHtml(site.favicon)}">`,
+    `<link rel="icon" href="/favicon.ico" sizes="any">`,
+    `<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">`,
+    `<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">`,
+    `<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">`,
+    `<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">`,
     renderJsonLd({ site, page }),
   ].filter(Boolean).join('\n  ');
 
