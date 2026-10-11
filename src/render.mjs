@@ -428,7 +428,7 @@ const blocks = {
     </div>`
         : ''
     }
-    <div class="cards${b.ratio === 'square' ? ' cards--square' : ''}">
+    <div class="cards${b.ratio === 'square' ? ' cards--square' : ''}${b.style === 'quotes' ? ' cards--quotes' : ''}">
     ${items}
     </div>
   </div>

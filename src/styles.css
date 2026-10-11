@@ -249,6 +249,15 @@ p:last-child { margin-bottom: 0; }
 }
 /* 桌機固定三欄，活動或文章不到三則時另外兩格就留白 */
 @media (min-width: 1000px) { .cards { grid-template-columns: repeat(3, 1fr); } }
+/* 金句頁專屬版面（2026-10-11，Robert：「金句頁改成專屬版面，兩欄、大字」）。
+   content/pages/quotes.json 的 cards 區塊加 "style": "quotes" 才會套用；其他頁的卡片不受影響。
+   ⚠️ 要放在上面那條「桌機固定三欄」之後：同樣是一個 class 的權重，寫在後面的才會贏。 */
+.cards--quotes { grid-template-columns: 1fr; gap: var(--space-4); }
+@media (min-width: 700px) { .cards--quotes { grid-template-columns: repeat(2, 1fr); } }
+.cards--quotes .card { padding: var(--space-6) var(--space-5); border-left: 3px solid var(--accent); gap: var(--space-3); }
+.cards--quotes .card h3 { order: 1; font-size: clamp(1.25rem, 1.05rem + 0.9vw, 1.65rem); line-height: 1.6; letter-spacing: .02em; }
+.cards--quotes .card__meta { order: 2; margin: 0; font-size: .82rem; color: var(--text-muted); }
+.cards--quotes .card p:not(.card__meta) { order: 3; }
 /* 卡片列上面沒有標題時（例如部落格），不需要再多一段上距 */
 .cards:first-child { margin-top: 0; }
 .card {
