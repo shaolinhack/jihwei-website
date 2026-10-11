@@ -13,6 +13,7 @@
   "blocks": [
     {
       "type": "cards",
+      "style": "quotes",
       "eyebrow": "金句",
       "title": "看過，想留下來的句子",
       "body": [
