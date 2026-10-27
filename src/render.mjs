@@ -3,7 +3,53 @@
  * 零相依，所以 Docker 建置階段不需要 npm install。
  */
 
+import { readFileSync } from 'node:fs';
+
 import { icon, brandIcon } from './icons.mjs';
+
+/* ── 世界地圖底圖 ──────────────────────────────────────────
+   src/world-map.svg 由 Natural Earth 的國界資料轉成等距長方投影，
+   整張圖是 lng -180~180、lat 90~-90 的線性對應（viewBox 2000x1000）。
+   上下各裁掉幾乎無人造訪的極區，版面才不會留一大片空白。
+   ──────────────────────────────────────────────────────── */
+
+const MAP_LAT_TOP = 84;      // 裁切後的最北緯度
+const MAP_LAT_BOTTOM = -57;  // 裁切後的最南緯度
+const MAP_CROP_TOP = ((90 - MAP_LAT_TOP) / 180) * 100;
+const MAP_CROP_SPAN = ((MAP_LAT_TOP - MAP_LAT_BOTTOM) / 180) * 100;
+
+let worldMapCache = null;
+
+function readWorldMap() {
+  if (worldMapCache !== null) return worldMapCache;
+  try {
+    worldMapCache = readFileSync(new URL('./world-map.svg', import.meta.url), 'utf8');
+  } catch {
+    worldMapCache = '';
+  }
+  return worldMapCache;
+}
+
+/**
+ * 回傳裁切好的底圖，並把去過的國家標記起來（data-visited），
+ * 讓整塊國土連同圖釘一起上色 —— 小國家光看圖釘不容易注意到。
+ */
+function worldMapSvg(visitedIso) {
+  const svg = readWorldMap();
+  if (!svg) return '';
+
+  const y = ((90 - MAP_LAT_TOP) / 180) * 1000;
+  const h = ((MAP_LAT_TOP - MAP_LAT_BOTTOM) / 180) * 1000;
+  let out = svg.replace('viewBox="0 0 2000 1000"', `viewBox="0 ${y.toFixed(1)} 2000 ${h.toFixed(1)}"`);
+
+  const wanted = new Set(toArray(visitedIso).map(String));
+  if (wanted.size) {
+    out = out.replace(/<path data-iso="(\d+)"/g, (match, iso) =>
+      wanted.has(iso) ? `<path data-visited="true" data-iso="${iso}"` : match
+    );
+  }
+  return out;
+}
 
 /* ── 工具 ─────────────────────────────────────────────────── */
 
@@ -473,6 +519,124 @@ const blocks = {
   },
 
   /**
+   * 旅遊足跡地圖。底圖是等距長方投影（src/world-map.svg），這個投影的好處是
+   * 經緯度換成畫面座標只是一次線性換算，所以圖釘位置在建置時就能算好寫死，
+   * 前端不需要任何地圖函式庫，離線也能正確顯示。
+   *
+   *   x = (lng + 180) / 360
+   *   y = (90 - lat) / 180
+   *
+   * 南極與北極圈幾乎沒有人去，整張 2:1 的圖放上頁面會有一大片空白，
+   * 所以上下各裁掉一段（MAP_LAT_TOP / MAP_LAT_BOTTOM），圖釘換算也跟著裁。
+   */
+  'travel-map'(b) {
+    const countries = toArray(b.items);
+
+    // 造訪紀錄攤平成一筆一筆，用來算統計與列出時間序
+    const visits = countries.flatMap((c) =>
+      toArray(c.visits).map((v) => ({ ...v, country: c }))
+    );
+    const visited = countries.filter((c) => toArray(c.visits).length);
+    const wishlist = countries.filter((c) => !toArray(c.visits).length);
+
+    const isoList = visited.map((c) => String(c.iso)).filter(Boolean);
+    const latest = visits
+      .map((v) => v.date)
+      .filter(Boolean)
+      .sort()
+      .pop();
+
+    /** 由 ISO 3166-1 兩碼產生國旗符號 —— 不必為每個國家準備圖檔 */
+    const flag = (code) =>
+      typeof code === 'string' && /^[A-Za-z]{2}$/.test(code)
+        ? String.fromCodePoint(...[...code.toUpperCase()].map((ch) => 0x1f1e6 + ch.charCodeAt(0) - 65))
+        : '';
+
+    const dates = (c) =>
+      toArray(c.visits)
+        .map((v) => v.date)
+        .filter(Boolean)
+        .sort();
+
+    // 圖釘。同一個國家只有一支，日期全部收在它的說明卡裡。
+    const pins = countries
+      .map((c, index) => {
+        if (!Number.isFinite(c.lat) || !Number.isFinite(c.lng)) return '';
+        const x = ((c.lng + 180) / 360) * 100;
+        const y = (((90 - c.lat) / 180) * 100 - MAP_CROP_TOP) / MAP_CROP_SPAN * 100;
+        if (y < 0 || y > 100) return '';
+
+        const list = dates(c);
+        const wish = !list.length;
+        const summary = wish ? '想去' : list.join('、');
+        const label = `${c.name}${summary ? `，${summary}` : ''}`;
+        return `<button type="button" class="travel-pin${wish ? ' travel-pin--wish' : ''}"
+        id="pin-${index}" style="--x:${x.toFixed(3)}%;--y:${y.toFixed(3)}%"
+        aria-expanded="false" aria-label="${escapeHtml(label)}">
+        <span class="travel-pin__dot" aria-hidden="true"></span>
+        <span class="travel-pin__card" role="tooltip">
+          <span class="travel-pin__name">${escapeHtml(`${flag(c.code)} ${c.name}`.trim())}</span>
+          <span class="travel-pin__dates">${escapeHtml(summary)}</span>
+          ${c.note ? `<span class="travel-pin__note">${escapeHtml(c.note)}</span>` : ''}
+        </span>
+      </button>`;
+      })
+      .filter(Boolean)
+      .join('\n      ');
+
+    // 國家清單，依最近一次造訪由新到舊
+    const rows = [...visited]
+      .sort((a, b2) => String(dates(b2).at(-1)).localeCompare(String(dates(a).at(-1))))
+      .map((c) => `<li class="travel-list__item reveal">
+        <span class="travel-list__flag" aria-hidden="true">${flag(c.code)}</span>
+        <span class="travel-list__body">
+          <span class="travel-list__name">${escapeHtml(c.name)}${c.en ? `<span class="travel-list__en">${escapeHtml(c.en)}</span>` : ''}</span>
+          ${c.note ? `<span class="travel-list__note">${escapeHtml(c.note)}</span>` : ''}
+        </span>
+        <span class="travel-list__dates">${dates(c).map((d) => `<span>${escapeHtml(d)}</span>`).join('')}</span>
+      </li>`)
+      .join('\n      ');
+
+    const stats = [
+      { value: visited.length, label: '個國家' },
+      { value: visits.length, label: '趟旅程' },
+      ...(latest ? [{ value: latest, label: '最近一次' }] : []),
+      ...(wishlist.length ? [{ value: wishlist.length, label: '個想去' }] : []),
+    ]
+      .map((s) => `<div class="travel-stats__item"><strong>${escapeHtml(s.value)}</strong><span>${escapeHtml(s.label)}</span></div>`)
+      .join('\n        ');
+
+    const base = worldMapSvg(isoList);
+
+    return `<section class="${sectionClass(b)}">
+  <div class="container">
+    <div class="prose prose--center">
+      ${eyebrow(b.eyebrow)}
+      ${heading(b.title)}
+      ${b.body ? paragraphs(b.body) : ''}
+    </div>
+
+    <div class="travel-stats">
+        ${stats}
+    </div>
+
+    <figure class="travel-map reveal">
+      <div class="travel-map__frame">
+        ${base}
+        ${pins}
+      </div>
+      ${b.caption ? `<figcaption class="travel-map__caption">${inline(b.caption)}</figcaption>` : ''}
+    </figure>
+
+    ${rows ? `<ol class="travel-list">
+      ${rows}
+    </ol>` : ''}
+    ${b.note ? `<p class="travel-map__note">${inline(b.note)}</p>` : ''}
+  </div>
+</section>`;
+  },
+
+  /**
    * 時間軸。單一時間序由新到舊，左右自動交錯 —— 新增一筆只要加一行資料，
    * 位置與間距都由版面決定，不必手動排。
    */
@@ -874,6 +1038,49 @@ const BEHAVIOUR_SCRIPT = `<script>
       if (e.key !== 'Enter' && e.key !== ' ') return;
       var img = e.target.closest && e.target.closest('.zoomable');
       if (img) { e.preventDefault(); open(img); }
+    });
+  })();
+
+  // 旅遊地圖的圖釘：桌機移過去就顯示，手機沒有 hover，所以點一下才展開。
+  // 同時只開一張卡，靠近邊緣時自動往內翻，才不會被切掉。
+  (function () {
+    var open = null;
+
+    function close() {
+      if (!open) return;
+      open.setAttribute('aria-expanded', 'false');
+      open.classList.remove('travel-pin--flip-left', 'travel-pin--flip-right');
+      open = null;
+    }
+
+    function show(pin) {
+      close();
+      pin.setAttribute('aria-expanded', 'true');
+      open = pin;
+
+      var card = pin.querySelector('.travel-pin__card');
+      if (!card) return;
+      var box = card.getBoundingClientRect();
+      var pad = 8;
+      if (box.left < pad) pin.classList.add('travel-pin--flip-left');
+      else if (box.right > window.innerWidth - pad) pin.classList.add('travel-pin--flip-right');
+    }
+
+    document.addEventListener('click', function (e) {
+      var pin = e.target.closest && e.target.closest('.travel-pin');
+      if (!pin) return close();
+      e.preventDefault();
+      if (pin === open) close();
+      else show(pin);
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') close();
+    });
+
+    // 鍵盤走訪時，focus 到哪一支就展開哪一支
+    document.querySelectorAll('.travel-pin').forEach(function (pin) {
+      pin.addEventListener('focus', function () { show(pin); });
     });
   })();
 <\/script>`;
