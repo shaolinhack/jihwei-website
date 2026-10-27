@@ -1,0 +1,25 @@
+{
+  "title": "世界足跡",
+  "description": "蘿蔔先生（李日韋）這輩子走過的國家。一個國家一支圖釘，記下什麼時候去的——地圖會隨著人生慢慢長出來。",
+  "route": "/travel",
+  "_怎麼新增": [
+    "國家與造訪時間全部寫在 content/travel.json，這一頁只負責版面。",
+    "新增一個國家：到 content/travel.json 的 countries 加一筆",
+    "  { \"code\": \"JP\", \"name\": \"日本\", \"visits\": [{ \"date\": \"2019.04\" }] }",
+    "座標會自動從 content/country-atlas.json 帶入，不用自己查經緯度。"
+  ],
+  "blocks": [
+    {
+      "type": "travel-map",
+      "source": "travel",
+      "eyebrow": "TRAVEL",
+      "title": "世界足跡",
+      "body": [
+        "一個國家一支圖釘，壓上去過的時間。",
+        "這張圖不會一次畫完——每多走一個地方，就多亮一塊。"
+      ],
+      "caption": "點圖釘看造訪時間。實心是去過的，空心是還想去的。",
+      "note": "地圖底圖採用 Natural Earth 公有領域資料。"
+    }
+  ]
+}
