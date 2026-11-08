@@ -451,6 +451,21 @@ a.card { text-decoration: none; color: inherit; }
 /* 去過的國家整塊上色 —— 小國家光靠一支圖釘不容易看見 */
 .travel-map__land path[data-visited] { fill: var(--blue-line); }
 
+/* ── 城市小點 ── */
+
+/* 實際走過的城市。畫在國家圖釘底下，不可點 —— 它們的角色是「這個國家我走了多廣」，
+   細節看圖釘卡片與下方清單。 */
+.travel-city {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  transform: translate(-50%, -50%);
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--blue);
+  opacity: .55;
+  pointer-events: none;
+}
+
 /* ── 圖釘 ── */
 
 .travel-pin {
@@ -485,7 +500,7 @@ a.card { text-decoration: none; color: inherit; }
   position: absolute; bottom: calc(100% + 6px); left: 50%;
   transform: translateX(-50%) translateY(4px);
   display: grid; gap: 2px;
-  min-width: max-content; max-width: 220px;
+  width: max-content; max-width: 260px;
   padding: var(--space-2) var(--space-3);
   background: var(--invert-bg); color: var(--invert-text);
   border-radius: var(--radius);
@@ -502,9 +517,12 @@ a.card { text-decoration: none; color: inherit; }
 .travel-pin--flip-left  .travel-pin__card { left: 0; transform: translateX(0) translateY(0); }
 .travel-pin--flip-right .travel-pin__card { left: auto; right: 0; transform: translateX(0) translateY(0); }
 
-.travel-pin__name  { font-weight: 600; }
-.travel-pin__dates { color: var(--invert-muted); font-variant-numeric: tabular-nums; }
-.travel-pin__note  { color: var(--invert-muted); }
+.travel-pin__name  { font-weight: 600; margin-bottom: 2px; }
+.travel-pin__trip  { display: grid; gap: 1px; }
+.travel-pin__trip + .travel-pin__trip { margin-top: var(--space-2); }
+.travel-pin__when  { color: var(--invert-text); font-variant-numeric: tabular-nums; }
+.travel-pin__where { color: var(--invert-muted); }
+.travel-pin__note  { color: var(--invert-muted); margin-top: 2px; }
 
 .travel-map__caption,
 .travel-map__note {
@@ -519,36 +537,46 @@ a.card { text-decoration: none; color: inherit; }
   display: grid; gap: var(--space-2);
 }
 .travel-list__item {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center; gap: var(--space-4);
-  padding: var(--space-3) var(--space-4);
+  display: grid; gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
   background: var(--bg-subtle);
   border: 1px solid transparent;
   border-radius: var(--radius);
 }
+.travel-list__head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-3);
+}
 .travel-list__flag { font-size: 1.5rem; line-height: 1; }
 .travel-list__body { display: grid; gap: 2px; min-width: 0; }
 .travel-list__name { font-weight: 600; }
+
+/* 一個國家底下，一趟行程一行 */
+.travel-trips { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.travel-trip {
+  display: grid;
+  grid-template-columns: minmax(10.5rem, auto) 1fr;
+  gap: var(--space-2) var(--space-4);
+  align-items: baseline;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border);
+}
+.travel-trip__when {
+  color: var(--blue); font-size: .875rem; font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.travel-trip__where { color: var(--text-muted); font-size: .875rem; }
 .travel-list__en {
   color: var(--text-muted); font-weight: 400;
   font-size: .8125rem; margin-left: var(--space-2);
 }
 .travel-list__note { color: var(--text-muted); font-size: .875rem; }
-.travel-list__dates {
-  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2);
-  color: var(--blue); font-size: .875rem; font-variant-numeric: tabular-nums;
-}
-.travel-list__dates span {
-  background: var(--blue-wash); border-radius: 999px;
-  padding: 2px var(--space-3); white-space: nowrap;
-}
 
 @media (max-width: 600px) {
-  .travel-list__item { grid-template-columns: auto 1fr; row-gap: var(--space-2); }
-  .travel-list__dates { grid-column: 2; justify-content: flex-start; }
+  .travel-list__item { padding: var(--space-4); }
+  .travel-trip { grid-template-columns: 1fr; gap: 2px; }
   .travel-pin { width: 32px; height: 32px; }
-  .travel-pin__card { max-width: 46vw; }
+  .travel-pin__card { max-width: 58vw; }
+  .travel-city { width: 4px; height: 4px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
