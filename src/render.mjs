@@ -532,7 +532,7 @@ const blocks = {
   'travel-map'(b) {
     const countries = toArray(b.items);
 
-    // 造訪紀錄攤平成一筆一筆，用來算統計與列出時間序
+    /** 一筆造訪紀錄攤平成 { start, end, cities, country }，用來算統計與排時間序 */
     const visits = countries.flatMap((c) =>
       toArray(c.visits).map((v) => ({ ...v, country: c }))
     );
@@ -540,11 +540,6 @@ const blocks = {
     const wishlist = countries.filter((c) => !toArray(c.visits).length);
 
     const isoList = visited.map((c) => String(c.iso)).filter(Boolean);
-    const latest = visits
-      .map((v) => v.date)
-      .filter(Boolean)
-      .sort()
-      .pop();
 
     /** 由 ISO 3166-1 兩碼產生國旗符號 —— 不必為每個國家準備圖檔 */
     const flag = (code) =>
@@ -552,31 +547,95 @@ const blocks = {
         ? String.fromCodePoint(...[...code.toUpperCase()].map((ch) => 0x1f1e6 + ch.charCodeAt(0) - 65))
         : '';
 
-    const dates = (c) =>
-      toArray(c.visits)
-        .map((v) => v.date)
-        .filter(Boolean)
-        .sort();
+    /**
+     * 把起訖日收成一行，重複的年月不再寫第二次：
+     *   2026.01.09 → 2026.01.15   成為   2026.01.09–15
+     *   2026.05.20 → 2026.06.01   成為   2026.05.20–06.01
+     *   2025.09    （沒有結束日）  成為   2025.09
+     */
+    const dateRange = (v) => {
+      const start = String(v.start ?? '').trim();
+      const end = String(v.end ?? '').trim();
+      if (!start) return '';
+      if (!end || end === start) return start;
 
-    // 圖釘。同一個國家只有一支，日期全部收在它的說明卡裡。
+      const a = start.split('.');
+      const z = end.split('.');
+      if (a[0] === z[0] && a[1] === z[1]) return `${start}–${z[2]}`;
+      if (a[0] === z[0]) return `${start}–${z.slice(1).join('.')}`;
+      return `${start}–${end}`;
+    };
+
+    /** 一個國家的所有行程，由舊到新 */
+    const trips = (c) =>
+      toArray(c.visits)
+        .filter((v) => v.start)
+        .sort((x, y) => String(x.start).localeCompare(String(y.start)));
+
+    const lastStart = (c) => String(trips(c).at(-1)?.start ?? '');
+
+    const latest = visits
+      .map((v) => v.start)
+      .filter(Boolean)
+      .sort()
+      .pop();
+
+    const cityCount = new Set(
+      visits.flatMap((v) => toArray(v.cities).map((city) => city.name))
+    ).size;
+
+    /** 經緯度 → 地圖上的百分比座標。超出裁切範圍回傳 null */
+    const project = (lat, lng) => {
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+      const x = ((lng + 180) / 360) * 100;
+      const y = ((((90 - lat) / 180) * 100) - MAP_CROP_TOP) / MAP_CROP_SPAN * 100;
+      return y < 0 || y > 100 ? null : { x, y };
+    };
+
+    // 城市小點。畫在國家圖釘底下，標出實際走過的地方。
+    // 同一座城市可能去過好幾趟，這裡先去重。
+    const seenCity = new Set();
+    const cityDots = visits
+      .flatMap((v) => toArray(v.cities))
+      .map((city) => {
+        const key = `${city.lat},${city.lng}`;
+        if (seenCity.has(key)) return '';
+        seenCity.add(key);
+        const pos = project(city.lat, city.lng);
+        if (!pos) return '';
+        return `<span class="travel-city" style="--x:${pos.x.toFixed(3)}%;--y:${pos.y.toFixed(3)}%"
+        title="${escapeHtml(city.name)}" aria-hidden="true"></span>`;
+      })
+      .filter(Boolean)
+      .join('\n        ');
+
+    // 國家圖釘。一個國家一支，行程與城市收在說明卡裡。
     const pins = countries
       .map((c, index) => {
-        if (!Number.isFinite(c.lat) || !Number.isFinite(c.lng)) return '';
-        const x = ((c.lng + 180) / 360) * 100;
-        const y = (((90 - c.lat) / 180) * 100 - MAP_CROP_TOP) / MAP_CROP_SPAN * 100;
-        if (y < 0 || y > 100) return '';
+        const pos = project(c.lat, c.lng);
+        if (!pos) return '';
 
-        const list = dates(c);
+        const list = trips(c);
         const wish = !list.length;
-        const summary = wish ? '想去' : list.join('、');
-        const label = `${c.name}${summary ? `，${summary}` : ''}`;
+        const summary = wish ? '想去' : list.map(dateRange).join('、');
+
+        const detail = list
+          .map((v) => {
+            const cities = toArray(v.cities).map((city) => city.name).join('、');
+            return `<span class="travel-pin__trip">
+            <span class="travel-pin__when">${escapeHtml(dateRange(v))}</span>
+            ${cities ? `<span class="travel-pin__where">${escapeHtml(cities)}</span>` : ''}
+          </span>`;
+          })
+          .join('');
+
         return `<button type="button" class="travel-pin${wish ? ' travel-pin--wish' : ''}"
-        id="pin-${index}" style="--x:${x.toFixed(3)}%;--y:${y.toFixed(3)}%"
-        aria-expanded="false" aria-label="${escapeHtml(label)}">
+        id="pin-${index}" style="--x:${pos.x.toFixed(3)}%;--y:${pos.y.toFixed(3)}%"
+        aria-expanded="false" aria-label="${escapeHtml(`${c.name}，${summary}`)}">
         <span class="travel-pin__dot" aria-hidden="true"></span>
         <span class="travel-pin__card" role="tooltip">
           <span class="travel-pin__name">${escapeHtml(`${flag(c.code)} ${c.name}`.trim())}</span>
-          <span class="travel-pin__dates">${escapeHtml(summary)}</span>
+          ${detail || `<span class="travel-pin__when">${escapeHtml(summary)}</span>`}
           ${c.note ? `<span class="travel-pin__note">${escapeHtml(c.note)}</span>` : ''}
         </span>
       </button>`;
@@ -584,21 +643,37 @@ const blocks = {
       .filter(Boolean)
       .join('\n      ');
 
-    // 國家清單，依最近一次造訪由新到舊
+    // 國家清單，依最近一次造訪由新到舊；每趟行程各自一行，帶完整日期與城市
     const rows = [...visited]
-      .sort((a, b2) => String(dates(b2).at(-1)).localeCompare(String(dates(a).at(-1))))
-      .map((c) => `<li class="travel-list__item reveal">
-        <span class="travel-list__flag" aria-hidden="true">${flag(c.code)}</span>
-        <span class="travel-list__body">
+      .sort((a, z) => lastStart(z).localeCompare(lastStart(a)))
+      .map((c) => {
+        const inner = trips(c)
+          .reverse()
+          .map((v) => {
+            const cities = toArray(v.cities).map((city) => city.name).join('、');
+            return `<li class="travel-trip">
+            <span class="travel-trip__when">${escapeHtml(dateRange(v))}</span>
+            <span class="travel-trip__where">${cities ? escapeHtml(cities) : ''}</span>
+          </li>`;
+          })
+          .join('\n          ');
+
+        return `<li class="travel-list__item reveal">
+        <span class="travel-list__head">
+          <span class="travel-list__flag" aria-hidden="true">${flag(c.code)}</span>
           <span class="travel-list__name">${escapeHtml(c.name)}${c.en ? `<span class="travel-list__en">${escapeHtml(c.en)}</span>` : ''}</span>
           ${c.note ? `<span class="travel-list__note">${escapeHtml(c.note)}</span>` : ''}
         </span>
-        <span class="travel-list__dates">${dates(c).map((d) => `<span>${escapeHtml(d)}</span>`).join('')}</span>
-      </li>`)
+        <ol class="travel-trips">
+          ${inner}
+        </ol>
+      </li>`;
+      })
       .join('\n      ');
 
     const stats = [
       { value: visited.length, label: '個國家' },
+      ...(cityCount ? [{ value: cityCount, label: '座城市' }] : []),
       { value: visits.length, label: '趟旅程' },
       ...(latest ? [{ value: latest, label: '最近一次' }] : []),
       ...(wishlist.length ? [{ value: wishlist.length, label: '個想去' }] : []),
@@ -623,6 +698,7 @@ const blocks = {
     <figure class="travel-map reveal">
       <div class="travel-map__frame">
         ${base}
+        ${cityDots}
         ${pins}
       </div>
       ${b.caption ? `<figcaption class="travel-map__caption">${inline(b.caption)}</figcaption>` : ''}
