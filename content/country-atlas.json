@@ -1,0 +1,1162 @@
+{
+  "_說明": [
+    "國家代碼（ISO 3166-1 alpha-2）→ 英文名、ISO 數字碼、國土中心座標。",
+    "content/travel.json 只要寫 code 與中文國名，建置時會自動補上座標。",
+    "想讓圖釘落在特定城市，就在 travel.json 那筆直接寫 lat / lng 覆蓋。",
+    "資料來源：Natural Earth（world-atlas 110m），公有領域。"
+  ],
+  "countries": {
+    "AD": {
+      "en": "Andorra",
+      "iso": "020",
+      "lat": 42.51,
+      "lng": 1.52
+    },
+    "AE": {
+      "en": "United Arab Emirates",
+      "iso": "784",
+      "lat": 23.87,
+      "lng": 54.21
+    },
+    "AF": {
+      "en": "Afghanistan",
+      "iso": "004",
+      "lat": 33.86,
+      "lng": 66.09
+    },
+    "AL": {
+      "en": "Albania",
+      "iso": "008",
+      "lat": 41.14,
+      "lng": 20.03
+    },
+    "AM": {
+      "en": "Armenia",
+      "iso": "051",
+      "lat": 40.22,
+      "lng": 45
+    },
+    "AO": {
+      "en": "Angola",
+      "iso": "024",
+      "lat": -12.29,
+      "lng": 17.5
+    },
+    "AQ": {
+      "en": "Antarctica",
+      "iso": "010",
+      "lat": -77.33,
+      "lng": 31.21
+    },
+    "AR": {
+      "en": "Argentina",
+      "iso": "032",
+      "lat": -35.22,
+      "lng": -65.15
+    },
+    "AT": {
+      "en": "Austria",
+      "iso": "040",
+      "lat": 47.61,
+      "lng": 14.08
+    },
+    "AU": {
+      "en": "Australia",
+      "iso": "036",
+      "lat": -25.56,
+      "lng": 134.38
+    },
+    "AZ": {
+      "en": "Azerbaijan",
+      "iso": "031",
+      "lat": 40.28,
+      "lng": 47.68
+    },
+    "BA": {
+      "en": "Bosnia and Herz.",
+      "iso": "070",
+      "lat": 44.18,
+      "lng": 17.82
+    },
+    "BB": {
+      "en": "Barbados",
+      "iso": "052",
+      "lat": 13.19,
+      "lng": -59.54
+    },
+    "BD": {
+      "en": "Bangladesh",
+      "iso": "050",
+      "lat": 23.84,
+      "lng": 90.27
+    },
+    "BE": {
+      "en": "Belgium",
+      "iso": "056",
+      "lat": 50.65,
+      "lng": 4.58
+    },
+    "BF": {
+      "en": "Burkina Faso",
+      "iso": "854",
+      "lat": 12.31,
+      "lng": -1.78
+    },
+    "BG": {
+      "en": "Bulgaria",
+      "iso": "100",
+      "lat": 42.75,
+      "lng": 25.19
+    },
+    "BH": {
+      "en": "Bahrain",
+      "iso": "048",
+      "lat": 26.07,
+      "lng": 50.56
+    },
+    "BI": {
+      "en": "Burundi",
+      "iso": "108",
+      "lat": -3.38,
+      "lng": 29.91
+    },
+    "BJ": {
+      "en": "Benin",
+      "iso": "204",
+      "lat": 9.65,
+      "lng": 2.34
+    },
+    "BN": {
+      "en": "Brunei",
+      "iso": "096",
+      "lat": 4.69,
+      "lng": 114.92
+    },
+    "BO": {
+      "en": "Bolivia",
+      "iso": "068",
+      "lat": -16.73,
+      "lng": -64.64
+    },
+    "BR": {
+      "en": "Brazil",
+      "iso": "076",
+      "lat": -10.81,
+      "lng": -53.05
+    },
+    "BS": {
+      "en": "Bahamas",
+      "iso": "044",
+      "lat": 24.51,
+      "lng": -77.92
+    },
+    "BT": {
+      "en": "Bhutan",
+      "iso": "064",
+      "lat": 27.43,
+      "lng": 90.47
+    },
+    "BW": {
+      "en": "Botswana",
+      "iso": "072",
+      "lat": -22.1,
+      "lng": 23.77
+    },
+    "BY": {
+      "en": "Belarus",
+      "iso": "112",
+      "lat": 53.51,
+      "lng": 27.98
+    },
+    "BZ": {
+      "en": "Belize",
+      "iso": "084",
+      "lat": 17.2,
+      "lng": -88.7
+    },
+    "CA": {
+      "en": "Canada",
+      "iso": "124",
+      "lat": 57.75,
+      "lng": -101.57
+    },
+    "CD": {
+      "en": "Dem. Rep. Congo",
+      "iso": "180",
+      "lat": -2.85,
+      "lng": 23.58
+    },
+    "CF": {
+      "en": "Central African Rep.",
+      "iso": "140",
+      "lat": 6.54,
+      "lng": 20.37
+    },
+    "CG": {
+      "en": "Congo",
+      "iso": "178",
+      "lat": -0.84,
+      "lng": 15.13
+    },
+    "CH": {
+      "en": "Switzerland",
+      "iso": "756",
+      "lat": 46.79,
+      "lng": 8.12
+    },
+    "CI": {
+      "en": "Côte d'Ivoire",
+      "iso": "384",
+      "lat": 7.55,
+      "lng": -5.61
+    },
+    "CL": {
+      "en": "Chile",
+      "iso": "152",
+      "lat": -37.34,
+      "lng": -71.67
+    },
+    "CM": {
+      "en": "Cameroon",
+      "iso": "120",
+      "lat": 5.66,
+      "lng": 12.61
+    },
+    "CN": {
+      "en": "China",
+      "iso": "156",
+      "lat": 36.61,
+      "lng": 103.87
+    },
+    "CO": {
+      "en": "Colombia",
+      "iso": "170",
+      "lat": 3.93,
+      "lng": -73.08
+    },
+    "CR": {
+      "en": "Costa Rica",
+      "iso": "188",
+      "lat": 9.97,
+      "lng": -84.18
+    },
+    "CU": {
+      "en": "Cuba",
+      "iso": "192",
+      "lat": 21.63,
+      "lng": -78.96
+    },
+    "CY": {
+      "en": "Cyprus",
+      "iso": "196",
+      "lat": 34.91,
+      "lng": 33.04
+    },
+    "CZ": {
+      "en": "Czechia",
+      "iso": "203",
+      "lat": 49.78,
+      "lng": 15.33
+    },
+    "DE": {
+      "en": "Germany",
+      "iso": "276",
+      "lat": 51.13,
+      "lng": 10.29
+    },
+    "DJ": {
+      "en": "Djibouti",
+      "iso": "262",
+      "lat": 11.77,
+      "lng": 42.5
+    },
+    "DK": {
+      "en": "Denmark",
+      "iso": "208",
+      "lat": 56.22,
+      "lng": 9.31
+    },
+    "DO": {
+      "en": "Dominican Rep.",
+      "iso": "214",
+      "lat": 18.88,
+      "lng": -70.46
+    },
+    "DZ": {
+      "en": "Algeria",
+      "iso": "012",
+      "lat": 28.19,
+      "lng": 2.6
+    },
+    "EC": {
+      "en": "Ecuador",
+      "iso": "218",
+      "lat": -1.46,
+      "lng": -78.38
+    },
+    "EE": {
+      "en": "Estonia",
+      "iso": "233",
+      "lat": 58.64,
+      "lng": 25.83
+    },
+    "EG": {
+      "en": "Egypt",
+      "iso": "818",
+      "lat": 26.51,
+      "lng": 29.84
+    },
+    "EH": {
+      "en": "W. Sahara",
+      "iso": "732",
+      "lat": 24.29,
+      "lng": -12.14
+    },
+    "ER": {
+      "en": "Eritrea",
+      "iso": "232",
+      "lat": 15.43,
+      "lng": 38.68
+    },
+    "ES": {
+      "en": "Spain",
+      "iso": "724",
+      "lat": 40.35,
+      "lng": -3.62
+    },
+    "ET": {
+      "en": "Ethiopia",
+      "iso": "231",
+      "lat": 8.65,
+      "lng": 39.55
+    },
+    "FI": {
+      "en": "Finland",
+      "iso": "246",
+      "lat": 64.5,
+      "lng": 26.21
+    },
+    "FJ": {
+      "en": "Fiji",
+      "iso": "242",
+      "lat": -16.38,
+      "lng": 11.6
+    },
+    "FK": {
+      "en": "Falkland Is.",
+      "iso": "238",
+      "lat": -51.71,
+      "lng": -59.42
+    },
+    "FR": {
+      "en": "France",
+      "iso": "250",
+      "lat": 46.61,
+      "lng": 2.34
+    },
+    "GA": {
+      "en": "Gabon",
+      "iso": "266",
+      "lat": -0.65,
+      "lng": 11.69
+    },
+    "GB": {
+      "en": "United Kingdom",
+      "iso": "826",
+      "lat": 53.88,
+      "lng": -2.66
+    },
+    "GE": {
+      "en": "Georgia",
+      "iso": "268",
+      "lat": 42.16,
+      "lng": 43.48
+    },
+    "GH": {
+      "en": "Ghana",
+      "iso": "288",
+      "lat": 7.93,
+      "lng": -1.24
+    },
+    "GL": {
+      "en": "Greenland",
+      "iso": "304",
+      "lat": 74.77,
+      "lng": -41.5
+    },
+    "GM": {
+      "en": "Gambia",
+      "iso": "270",
+      "lat": 13.48,
+      "lng": -15.43
+    },
+    "GN": {
+      "en": "Guinea",
+      "iso": "324",
+      "lat": 10.45,
+      "lng": -11.06
+    },
+    "GQ": {
+      "en": "Eq. Guinea",
+      "iso": "226",
+      "lat": 1.65,
+      "lng": 10.37
+    },
+    "GR": {
+      "en": "Greece",
+      "iso": "300",
+      "lat": 39.34,
+      "lng": 22.56
+    },
+    "GT": {
+      "en": "Guatemala",
+      "iso": "320",
+      "lat": 15.7,
+      "lng": -90.37
+    },
+    "GU": {
+      "en": "Guam",
+      "iso": "316",
+      "lat": 13.44,
+      "lng": 144.79
+    },
+    "GW": {
+      "en": "Guinea-Bissau",
+      "iso": "624",
+      "lat": 12.02,
+      "lng": -15.11
+    },
+    "GY": {
+      "en": "Guyana",
+      "iso": "328",
+      "lat": 4.79,
+      "lng": -58.97
+    },
+    "HK": {
+      "en": "Hong Kong",
+      "iso": "344",
+      "lat": 22.32,
+      "lng": 114.17
+    },
+    "HN": {
+      "en": "Honduras",
+      "iso": "340",
+      "lat": 14.82,
+      "lng": -86.59
+    },
+    "HR": {
+      "en": "Croatia",
+      "iso": "191",
+      "lat": 45.02,
+      "lng": 16.57
+    },
+    "HT": {
+      "en": "Haiti",
+      "iso": "332",
+      "lat": 18.9,
+      "lng": -72.66
+    },
+    "HU": {
+      "en": "Hungary",
+      "iso": "348",
+      "lat": 47.2,
+      "lng": 19.36
+    },
+    "ID": {
+      "en": "Indonesia",
+      "iso": "360",
+      "lat": -0.25,
+      "lng": 114.02
+    },
+    "IE": {
+      "en": "Ireland",
+      "iso": "372",
+      "lat": 53.18,
+      "lng": -8.01
+    },
+    "IL": {
+      "en": "Israel",
+      "iso": "376",
+      "lat": 31.49,
+      "lng": 35
+    },
+    "IN": {
+      "en": "India",
+      "iso": "356",
+      "lat": 22.92,
+      "lng": 79.59
+    },
+    "IQ": {
+      "en": "Iraq",
+      "iso": "368",
+      "lat": 33.04,
+      "lng": 43.76
+    },
+    "IR": {
+      "en": "Iran",
+      "iso": "364",
+      "lat": 32.52,
+      "lng": 54.29
+    },
+    "IS": {
+      "en": "Iceland",
+      "iso": "352",
+      "lat": 65.07,
+      "lng": -18.76
+    },
+    "IT": {
+      "en": "Italy",
+      "iso": "380",
+      "lat": 43.47,
+      "lng": 12.22
+    },
+    "JM": {
+      "en": "Jamaica",
+      "iso": "388",
+      "lat": 18.14,
+      "lng": -77.32
+    },
+    "JO": {
+      "en": "Jordan",
+      "iso": "400",
+      "lat": 31.25,
+      "lng": 36.78
+    },
+    "JP": {
+      "en": "Japan",
+      "iso": "392",
+      "lat": 36.02,
+      "lng": 136.88
+    },
+    "KE": {
+      "en": "Kenya",
+      "iso": "404",
+      "lat": 0.6,
+      "lng": 37.79
+    },
+    "KG": {
+      "en": "Kyrgyzstan",
+      "iso": "417",
+      "lat": 41.51,
+      "lng": 74.62
+    },
+    "KH": {
+      "en": "Cambodia",
+      "iso": "116",
+      "lat": 12.68,
+      "lng": 104.88
+    },
+    "KP": {
+      "en": "North Korea",
+      "iso": "408",
+      "lat": 40.14,
+      "lng": 127.16
+    },
+    "KR": {
+      "en": "South Korea",
+      "iso": "410",
+      "lat": 36.43,
+      "lng": 127.82
+    },
+    "KW": {
+      "en": "Kuwait",
+      "iso": "414",
+      "lat": 29.31,
+      "lng": 47.6
+    },
+    "KZ": {
+      "en": "Kazakhstan",
+      "iso": "398",
+      "lat": 48.19,
+      "lng": 67.28
+    },
+    "LA": {
+      "en": "Laos",
+      "iso": "418",
+      "lat": 18.45,
+      "lng": 103.75
+    },
+    "LB": {
+      "en": "Lebanon",
+      "iso": "422",
+      "lat": 33.91,
+      "lng": 35.87
+    },
+    "LI": {
+      "en": "Liechtenstein",
+      "iso": "438",
+      "lat": 47.17,
+      "lng": 9.55
+    },
+    "LK": {
+      "en": "Sri Lanka",
+      "iso": "144",
+      "lat": 7.7,
+      "lng": 80.67
+    },
+    "LR": {
+      "en": "Liberia",
+      "iso": "430",
+      "lat": 6.43,
+      "lng": -9.41
+    },
+    "LS": {
+      "en": "Lesotho",
+      "iso": "426",
+      "lat": -29.63,
+      "lng": 28.17
+    },
+    "LT": {
+      "en": "Lithuania",
+      "iso": "440",
+      "lat": 55.28,
+      "lng": 23.88
+    },
+    "LU": {
+      "en": "Luxembourg",
+      "iso": "442",
+      "lat": 49.77,
+      "lng": 5.97
+    },
+    "LV": {
+      "en": "Latvia",
+      "iso": "428",
+      "lat": 56.81,
+      "lng": 24.83
+    },
+    "LY": {
+      "en": "Libya",
+      "iso": "434",
+      "lat": 27,
+      "lng": 17.97
+    },
+    "MA": {
+      "en": "Morocco",
+      "iso": "504",
+      "lat": 29.89,
+      "lng": -8.42
+    },
+    "MC": {
+      "en": "Monaco",
+      "iso": "492",
+      "lat": 43.74,
+      "lng": 7.42
+    },
+    "MD": {
+      "en": "Moldova",
+      "iso": "498",
+      "lat": 47.2,
+      "lng": 28.41
+    },
+    "ME": {
+      "en": "Montenegro",
+      "iso": "499",
+      "lat": 42.79,
+      "lng": 19.29
+    },
+    "MG": {
+      "en": "Madagascar",
+      "iso": "450",
+      "lat": -19.36,
+      "lng": 46.69
+    },
+    "MK": {
+      "en": "Macedonia",
+      "iso": "807",
+      "lat": 41.61,
+      "lng": 21.7
+    },
+    "ML": {
+      "en": "Mali",
+      "iso": "466",
+      "lat": 17.27,
+      "lng": -3.54
+    },
+    "MM": {
+      "en": "Myanmar",
+      "iso": "104",
+      "lat": 21.02,
+      "lng": 96.51
+    },
+    "MN": {
+      "en": "Mongolia",
+      "iso": "496",
+      "lat": 46.82,
+      "lng": 102.95
+    },
+    "MO": {
+      "en": "Macao",
+      "iso": "446",
+      "lat": 22.2,
+      "lng": 113.55
+    },
+    "MR": {
+      "en": "Mauritania",
+      "iso": "478",
+      "lat": 20.21,
+      "lng": -10.33
+    },
+    "MT": {
+      "en": "Malta",
+      "iso": "470",
+      "lat": 35.9,
+      "lng": 14.51
+    },
+    "MU": {
+      "en": "Mauritius",
+      "iso": "480",
+      "lat": -20.35,
+      "lng": 57.55
+    },
+    "MV": {
+      "en": "Maldives",
+      "iso": "462",
+      "lat": 3.2,
+      "lng": 73.22
+    },
+    "MW": {
+      "en": "Malawi",
+      "iso": "454",
+      "lat": -13.17,
+      "lng": 34.19
+    },
+    "MX": {
+      "en": "Mexico",
+      "iso": "484",
+      "lat": 23.94,
+      "lng": -102.58
+    },
+    "MY": {
+      "en": "Malaysia",
+      "iso": "458",
+      "lat": 3.55,
+      "lng": 114.68
+    },
+    "MZ": {
+      "en": "Mozambique",
+      "iso": "508",
+      "lat": -17.23,
+      "lng": 35.47
+    },
+    "NA": {
+      "en": "Namibia",
+      "iso": "516",
+      "lat": -22.1,
+      "lng": 17.16
+    },
+    "NC": {
+      "en": "New Caledonia",
+      "iso": "540",
+      "lat": -21.26,
+      "lng": 165.53
+    },
+    "NE": {
+      "en": "Niger",
+      "iso": "562",
+      "lat": 17.35,
+      "lng": 9.33
+    },
+    "NG": {
+      "en": "Nigeria",
+      "iso": "566",
+      "lat": 9.55,
+      "lng": 8
+    },
+    "NI": {
+      "en": "Nicaragua",
+      "iso": "558",
+      "lat": 12.85,
+      "lng": -85.02
+    },
+    "NL": {
+      "en": "Netherlands",
+      "iso": "528",
+      "lat": 52.3,
+      "lng": 5.51
+    },
+    "NO": {
+      "en": "Norway",
+      "iso": "578",
+      "lat": 64.54,
+      "lng": 14.24
+    },
+    "NP": {
+      "en": "Nepal",
+      "iso": "524",
+      "lat": 28.24,
+      "lng": 84.01
+    },
+    "NZ": {
+      "en": "New Zealand",
+      "iso": "554",
+      "lat": -43.99,
+      "lng": 170.51
+    },
+    "OM": {
+      "en": "Oman",
+      "iso": "512",
+      "lat": 20.58,
+      "lng": 56.1
+    },
+    "PA": {
+      "en": "Panama",
+      "iso": "591",
+      "lat": 8.53,
+      "lng": -80.11
+    },
+    "PE": {
+      "en": "Peru",
+      "iso": "604",
+      "lat": -9.19,
+      "lng": -74.39
+    },
+    "PG": {
+      "en": "Papua New Guinea",
+      "iso": "598",
+      "lat": -6.65,
+      "lng": 144.33
+    },
+    "PH": {
+      "en": "Philippines",
+      "iso": "608",
+      "lat": 15.75,
+      "lng": 121.54
+    },
+    "PK": {
+      "en": "Pakistan",
+      "iso": "586",
+      "lat": 29.97,
+      "lng": 69.41
+    },
+    "PL": {
+      "en": "Poland",
+      "iso": "616",
+      "lat": 52.15,
+      "lng": 19.31
+    },
+    "PR": {
+      "en": "Puerto Rico",
+      "iso": "630",
+      "lat": 18.24,
+      "lng": -66.48
+    },
+    "PS": {
+      "en": "Palestine",
+      "iso": "275",
+      "lat": 31.94,
+      "lng": 35.27
+    },
+    "PT": {
+      "en": "Portugal",
+      "iso": "620",
+      "lat": 39.63,
+      "lng": -8.06
+    },
+    "PW": {
+      "en": "Palau",
+      "iso": "585",
+      "lat": 7.51,
+      "lng": 134.58
+    },
+    "PY": {
+      "en": "Paraguay",
+      "iso": "600",
+      "lat": -23.25,
+      "lng": -58.39
+    },
+    "QA": {
+      "en": "Qatar",
+      "iso": "634",
+      "lat": 25.32,
+      "lng": 51.18
+    },
+    "RO": {
+      "en": "Romania",
+      "iso": "642",
+      "lat": 45.86,
+      "lng": 24.94
+    },
+    "RS": {
+      "en": "Serbia",
+      "iso": "688",
+      "lat": 44.23,
+      "lng": 20.82
+    },
+    "RU": {
+      "en": "Russia",
+      "iso": "643",
+      "lat": 55.7,
+      "lng": 202.79
+    },
+    "RW": {
+      "en": "Rwanda",
+      "iso": "646",
+      "lat": -2.01,
+      "lng": 29.92
+    },
+    "SA": {
+      "en": "Saudi Arabia",
+      "iso": "682",
+      "lat": 24.12,
+      "lng": 44.52
+    },
+    "SB": {
+      "en": "Solomon Is.",
+      "iso": "090",
+      "lat": -7.9,
+      "lng": 159.1
+    },
+    "SC": {
+      "en": "Seychelles",
+      "iso": "690",
+      "lat": -4.68,
+      "lng": 55.49
+    },
+    "SD": {
+      "en": "Sudan",
+      "iso": "729",
+      "lat": 15.99,
+      "lng": 29.86
+    },
+    "SE": {
+      "en": "Sweden",
+      "iso": "752",
+      "lat": 62.81,
+      "lng": 16.6
+    },
+    "SG": {
+      "en": "Singapore",
+      "iso": "702",
+      "lat": 1.35,
+      "lng": 103.82
+    },
+    "SI": {
+      "en": "Slovenia",
+      "iso": "705",
+      "lat": 46.13,
+      "lng": 14.94
+    },
+    "SK": {
+      "en": "Slovakia",
+      "iso": "703",
+      "lat": 48.73,
+      "lng": 19.51
+    },
+    "SL": {
+      "en": "Sierra Leone",
+      "iso": "694",
+      "lat": 8.53,
+      "lng": -11.8
+    },
+    "SM": {
+      "en": "San Marino",
+      "iso": "674",
+      "lat": 43.94,
+      "lng": 12.46
+    },
+    "SN": {
+      "en": "Senegal",
+      "iso": "686",
+      "lat": 14.35,
+      "lng": -14.51
+    },
+    "SO": {
+      "en": "Somalia",
+      "iso": "706",
+      "lat": 4.75,
+      "lng": 45.73
+    },
+    "SR": {
+      "en": "Suriname",
+      "iso": "740",
+      "lat": 4.12,
+      "lng": -55.91
+    },
+    "SS": {
+      "en": "S. Sudan",
+      "iso": "728",
+      "lat": 7.29,
+      "lng": 30.2
+    },
+    "SV": {
+      "en": "El Salvador",
+      "iso": "222",
+      "lat": 13.73,
+      "lng": -88.87
+    },
+    "SY": {
+      "en": "Syria",
+      "iso": "760",
+      "lat": 35.01,
+      "lng": 38.54
+    },
+    "SZ": {
+      "en": "eSwatini",
+      "iso": "748",
+      "lat": -26.49,
+      "lng": 31.4
+    },
+    "TD": {
+      "en": "Chad",
+      "iso": "148",
+      "lat": 15.33,
+      "lng": 18.58
+    },
+    "TF": {
+      "en": "Fr. S. Antarctic Lands",
+      "iso": "260",
+      "lat": -49.31,
+      "lng": 69.53
+    },
+    "TG": {
+      "en": "Togo",
+      "iso": "768",
+      "lat": 8.44,
+      "lng": 1
+    },
+    "TH": {
+      "en": "Thailand",
+      "iso": "764",
+      "lat": 15.02,
+      "lng": 101.01
+    },
+    "TJ": {
+      "en": "Tajikistan",
+      "iso": "762",
+      "lat": 38.58,
+      "lng": 71.03
+    },
+    "TL": {
+      "en": "Timor-Leste",
+      "iso": "626",
+      "lat": -8.77,
+      "lng": 125.97
+    },
+    "TM": {
+      "en": "Turkmenistan",
+      "iso": "795",
+      "lat": 39.09,
+      "lng": 59.28
+    },
+    "TN": {
+      "en": "Tunisia",
+      "iso": "788",
+      "lat": 34.17,
+      "lng": 9.53
+    },
+    "TO": {
+      "en": "Tonga",
+      "iso": "776",
+      "lat": -21.18,
+      "lng": -175.2
+    },
+    "TR": {
+      "en": "Turkey",
+      "iso": "792",
+      "lat": 38.99,
+      "lng": 35.39
+    },
+    "TT": {
+      "en": "Trinidad and Tobago",
+      "iso": "780",
+      "lat": 10.43,
+      "lng": -61.33
+    },
+    "TW": {
+      "en": "Taiwan",
+      "iso": "158",
+      "lat": 23.74,
+      "lng": 120.97
+    },
+    "TZ": {
+      "en": "Tanzania",
+      "iso": "834",
+      "lat": -6.26,
+      "lng": 34.75
+    },
+    "UA": {
+      "en": "Ukraine",
+      "iso": "804",
+      "lat": 49.15,
+      "lng": 31.23
+    },
+    "UG": {
+      "en": "Uganda",
+      "iso": "800",
+      "lat": 1.3,
+      "lng": 32.36
+    },
+    "US": {
+      "en": "United States of America",
+      "iso": "840",
+      "lat": 39.5,
+      "lng": -99.06
+    },
+    "UY": {
+      "en": "Uruguay",
+      "iso": "858",
+      "lat": -32.78,
+      "lng": -56
+    },
+    "UZ": {
+      "en": "Uzbekistan",
+      "iso": "860",
+      "lat": 41.75,
+      "lng": 63.2
+    },
+    "VA": {
+      "en": "Vatican City",
+      "iso": "336",
+      "lat": 41.9,
+      "lng": 12.45
+    },
+    "VE": {
+      "en": "Venezuela",
+      "iso": "862",
+      "lat": 7.16,
+      "lng": -66.16
+    },
+    "VN": {
+      "en": "Vietnam",
+      "iso": "704",
+      "lat": 16.66,
+      "lng": 106.29
+    },
+    "VU": {
+      "en": "Vanuatu",
+      "iso": "548",
+      "lat": -15.22,
+      "lng": 166.91
+    },
+    "WS": {
+      "en": "Samoa",
+      "iso": "882",
+      "lat": -13.76,
+      "lng": -172.1
+    },
+    "YE": {
+      "en": "Yemen",
+      "iso": "887",
+      "lat": 15.91,
+      "lng": 47.54
+    },
+    "ZA": {
+      "en": "South Africa",
+      "iso": "710",
+      "lat": -28.96,
+      "lng": 25.12
+    },
+    "ZM": {
+      "en": "Zambia",
+      "iso": "894",
+      "lat": -13.4,
+      "lng": 27.73
+    },
+    "ZW": {
+      "en": "Zimbabwe",
+      "iso": "716",
+      "lat": -18.91,
+      "lng": 29.79
+    }
+  }
+}

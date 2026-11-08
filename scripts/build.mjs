@@ -89,7 +89,7 @@ async function loadPages() {
  * 把區塊裡的 source 換成 content/ 底下的實際資料。
  * 時間軸這種會一直長的內容獨立成資料檔，頁面只要指名要哪一份就好。
  */
-function resolveData(page, { milestones, posts, podcast, books }) {
+function resolveData(page, { milestones, posts, podcast, books, travel, atlas }) {
   // 文章頁在 content 裡是「一篇文章」的形狀（標題、日期、內文節點），
   // 而不是區塊陣列 —— 寫文章的人不該去組版面。這裡把它展開成區塊。
   if (page.layout === 'post') {
@@ -151,6 +151,28 @@ function resolveData(page, { milestones, posts, podcast, books }) {
         image: ep.image ? { src: ep.image, alt: ep.title } : undefined,
         meta: [ep.published?.slice(0, 10).replace(/-/g, '.'), ep.duration].filter(Boolean).join('　·　'),
       }));
+      return { ...block, items };
+    }
+
+    // 旅遊足跡：travel.json 只寫國名與日期，座標與國界代碼由 country-atlas.json 補齊，
+    // 這樣新增一個國家不必自己查經緯度。
+    if (block.type === 'travel-map') {
+      const items = (Array.isArray(travel.countries) ? travel.countries : []).map((c) => {
+        const ref = c.code ? atlas[String(c.code).toUpperCase()] : null;
+        if (!ref && (!Number.isFinite(c.lat) || !Number.isFinite(c.lng))) {
+          throw new Error(
+            `content/travel.json 的「${c.name ?? c.code ?? '(未命名)'}」查不到座標：` +
+              `code「${c.code}」不在 content/country-atlas.json 裡，` +
+              `請改用對照表中的代碼，或直接在該筆寫上 lat / lng。`
+          );
+        }
+        return {
+          ...ref,
+          ...c,
+          lat: Number.isFinite(c.lat) ? c.lat : ref.lat,
+          lng: Number.isFinite(c.lng) ? c.lng : ref.lng,
+        };
+      });
       return { ...block, items };
     }
 
@@ -314,6 +336,8 @@ async function main() {
   const posts = (await readJson(path.join(CONTENT_DIR, 'posts-index.json'))) ?? [];
   const podcast = (await readJson(path.join(CONTENT_DIR, 'podcast-index.json'))) ?? { episodes: [] };
   const books = (await readJson(path.join(CONTENT_DIR, 'books.json'))) ?? { books: [] };
+  const travel = (await readJson(path.join(CONTENT_DIR, 'travel.json'))) ?? { countries: [] };
+  const atlas = ((await readJson(path.join(CONTENT_DIR, 'country-atlas.json'))) ?? {}).countries ?? {};
 
   // 1. 快照打底
   const hasSnapshot = await isNonEmptyDir(SNAPSHOT_DIR);
@@ -326,7 +350,7 @@ async function main() {
   // 2. 重寫版覆蓋（含由 podcast-index.json 自動產生的單集頁）
   const pages = [...(await loadPages()), ...episodePages(podcast)];
   for (const page of pages) {
-    await write(fileFromRoute(page.route), renderPage({ site, page: resolveData(page, { milestones, posts, podcast, books }) }));
+    await write(fileFromRoute(page.route), renderPage({ site, page: resolveData(page, { milestones, posts, podcast, books, travel, atlas }) }));
   }
 
   // 3. 設計系統與自備素材
