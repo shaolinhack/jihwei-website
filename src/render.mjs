@@ -613,19 +613,31 @@ const blocks = {
       return y < 0 || y > 100 ? null : { x, y };
     };
 
-    // 城市小點。畫在國家圖釘底下，標出實際走過的地方。
-    // 同一座城市可能去過好幾趟，這裡先去重。
-    const seenCity = new Set();
-    const cityDots = visits
-      .flatMap((v) => toArray(v.cities))
-      .map((city) => {
-        const key = `${city.lat},${city.lng}`;
-        if (seenCity.has(key)) return '';
-        seenCity.add(key);
-        const pos = project(city.lat, city.lng);
-        if (!pos) return '';
-        return `<span class="travel-city" style="--x:${pos.x.toFixed(3)}%;--y:${pos.y.toFixed(3)}%"
-        title="${escapeHtml(city.name)}" aria-hidden="true"></span>`;
+    /**
+     * 地圖上的城市點。每個國家取「去過的城市」與「該國主要城市」的聯集：
+     * 去過的上色，沒去過的是灰的 —— 放大之後一眼看得出還有哪裡沒走過。
+     *
+     * 世界視角只顯示去過的小點；放大到某個國家後，該國的點才會變大並標出名稱。
+     */
+    const cityDots = countries
+      .flatMap((c) => {
+        const visitedNames = new Set(placesOf(c).map((city) => city.name));
+        const all = [
+          ...placesOf(c),
+          ...toArray(c.majors).filter((m) => !visitedNames.has(m.name)),
+        ];
+
+        return all.map((city) => {
+          const pos = project(city.lat, city.lng);
+          if (!pos) return '';
+          const been = visitedNames.has(city.name);
+          return `<span class="travel-city${been ? ' travel-city--been' : ''}"
+          data-country="${escapeHtml(c.code)}"
+          style="--x:${pos.x.toFixed(3)}%;--y:${pos.y.toFixed(3)}%">
+          <span class="travel-city__dot" aria-hidden="true"></span>
+          <span class="travel-city__name">${escapeHtml(city.name)}</span>
+        </span>`;
+        });
       })
       .filter(Boolean)
       .join('\n        ');
@@ -648,8 +660,25 @@ const blocks = {
             (places ? `<span class="travel-pin__where">${escapeHtml(places)}</span>` : '')
           : '';
 
+        // bbox 轉成地圖上的百分比框，前端據此決定放大倍率與位移
+        const box = toArray(c.bbox);
+        const focus =
+          box.length === 4
+            ? (() => {
+                const a = project(box[3], box[0]); // 左上（最大緯度、最小經度）
+                const z = project(box[1], box[2]); // 右下
+                return a && z
+                  ? ` data-x0="${a.x.toFixed(3)}" data-y0="${a.y.toFixed(3)}"` +
+                    ` data-x1="${z.x.toFixed(3)}" data-y1="${z.y.toFixed(3)}"`
+                  : '';
+              })()
+            : '';
+
         return `<button type="button" class="travel-pin${wish ? ' travel-pin--wish' : ''}"
         id="pin-${index}" style="--x:${pos.x.toFixed(3)}%;--y:${pos.y.toFixed(3)}%"
+        data-country="${escapeHtml(c.code)}"
+        data-name="${escapeHtml(c.name)}"
+        data-summary="${escapeHtml(summary)}"${focus}
         aria-expanded="false" aria-label="${escapeHtml(`${c.name}，${summary}`)}">
         <span class="travel-pin__dot" aria-hidden="true"></span>
         <span class="travel-pin__card" role="tooltip">
@@ -759,10 +788,16 @@ const blocks = {
     </div>
 
     <figure class="travel-map reveal">
-      <div class="travel-map__frame">
-        ${base}
-        ${cityDots}
-        ${pins}
+      <div class="travel-map__frame" data-zoom="out">
+        <div class="travel-map__scene">
+          ${base}
+          ${cityDots}
+          ${pins}
+        </div>
+      </div>
+      <div class="travel-map__bar" hidden>
+        <span class="travel-map__where"></span>
+        <button type="button" class="travel-map__back">回到世界地圖</button>
       </div>
       ${b.caption ? `<figcaption class="travel-map__caption">${inline(b.caption)}</figcaption>` : ''}
     </figure>
@@ -1180,6 +1215,170 @@ const BEHAVIOUR_SCRIPT = `<script>
     });
   })();
 
+  // 旅遊地圖的縮放：點國家圖釘就放大到那個國家，該國的城市會變大並標出名稱，
+  // 去過的上色、沒去過的灰色。整個場景用一次 transform 推上去 ——
+  // 圖釘與城市點都是百分比定位，所以縮放時彼此的相對位置自動吻合，
+  // 不必逐一重算座標。字與點則反向縮放，維持原本大小。
+  (function () {
+    var frame = document.querySelector('.travel-map__frame');
+    if (!frame) return;
+
+    var scene = frame.querySelector('.travel-map__scene');
+    var figure = frame.closest('.travel-map') || frame.parentNode;
+    var bar = figure.querySelector('.travel-map__bar');
+    var where = figure.querySelector('.travel-map__where');
+    var back = figure.querySelector('.travel-map__back');
+    if (!scene) return;
+
+    var MAX_ZOOM = 22;
+    var current = null;
+
+    function setScale(k, tx, ty) {
+      scene.style.transform = 'translate(' + tx + '%, ' + ty + '%) scale(' + k + ')';
+      // 子元素反向縮放，字級與點的大小才不會跟著放大
+      scene.style.setProperty('--inv', String(1 / k));
+    }
+
+    var allCities = scene.querySelectorAll('.travel-city');
+    var allPins = scene.querySelectorAll('.travel-pin');
+
+    /** CSS 比不了「屬性值相等」，所以聚焦哪一國由這裡掛 class */
+    function markFocus(code) {
+      allCities.forEach(function (el) {
+        el.classList.toggle('travel-city--focus', !!code && el.dataset.country === code);
+      });
+      // 聚焦中的國家收起自己的圖釘 —— 它就站在國土中央，會擋住城市
+      allPins.forEach(function (el) {
+        el.classList.toggle('travel-pin--focus', !!code && el.dataset.country === code);
+      });
+    }
+
+    /**
+     * 標籤避讓。關東那幾座城市彼此只差一個緯度，放大後名稱還是會疊在一起。
+     * 依序擺放：去過的城市優先，位置先試點的下方、再試上方，
+     * 兩個位置都和已擺好的標籤相撞就收起來 —— 地圖讀得清楚比列得齊全重要，
+     * 完整清單在下方本來就有。
+     */
+    function declutter() {
+      var placed = [];
+      var focused = scene.querySelectorAll('.travel-city--focus');
+      if (!focused.length) return;
+
+      // 先全部還原，否則上一次的結果會影響這一次的量測
+      focused.forEach(function (el) {
+        el.classList.remove(
+          'travel-city--above', 'travel-city--right', 'travel-city--left', 'travel-city--muted'
+        );
+      });
+
+      var PAD = 5; // 標籤之間留一點空隙，純粹不重疊還是會擠在一起
+
+      function hits(r) {
+        for (var i = 0; i < placed.length; i++) {
+          var q = placed[i];
+          if (
+            r.left - PAD < q.right && r.right + PAD > q.left &&
+            r.top - PAD < q.bottom && r.bottom + PAD > q.top
+          ) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      // 去過的先擺，擺不下的才是沒去過的
+      var order = [].slice.call(focused).sort(function (a, z) {
+        return (z.classList.contains('travel-city--been') ? 1 : 0) -
+               (a.classList.contains('travel-city--been') ? 1 : 0);
+      });
+
+      // 四個候選位置：點的下方（預設）、上方、右側、左側
+      var SPOTS = ['', 'travel-city--above', 'travel-city--right', 'travel-city--left'];
+
+      order.forEach(function (el) {
+        var label = el.querySelector('.travel-city__name');
+        if (!label) return;
+
+        for (var i = 0; i < SPOTS.length; i++) {
+          SPOTS.forEach(function (cls) { if (cls) el.classList.remove(cls); });
+          if (SPOTS[i]) el.classList.add(SPOTS[i]);
+
+          var box = label.getBoundingClientRect();
+          if (!hits(box)) {
+            placed.push(box);
+            return;
+          }
+        }
+
+        // 四個位置都撞到，就只留小點
+        SPOTS.forEach(function (cls) { if (cls) el.classList.remove(cls); });
+        el.classList.add('travel-city--muted');
+      });
+    }
+
+    function reset() {
+      current = null;
+      frame.setAttribute('data-zoom', 'out');
+      markFocus(null);
+      setScale(1, 0, 0);
+      if (bar) bar.hidden = true;
+    }
+
+    function zoomTo(pin) {
+      var x0 = parseFloat(pin.dataset.x0);
+      var y0 = parseFloat(pin.dataset.y0);
+      var x1 = parseFloat(pin.dataset.x1);
+      var y1 = parseFloat(pin.dataset.y1);
+      if (!isFinite(x0) || !isFinite(y0) || !isFinite(x1) || !isFinite(y1)) return false;
+
+      var w = Math.abs(x1 - x0);
+      var h = Math.abs(y1 - y0);
+      var rect = frame.getBoundingClientRect();
+      if (!rect.width || !rect.height) return false;
+
+      // 國界框換算成畫面比例後，取較受限的一軸決定倍率，留一成邊距
+      var k = Math.min(100 / Math.max(w, 0.4), 100 / Math.max(h, 0.4)) * 0.9;
+      k = Math.max(1.6, Math.min(MAX_ZOOM, k));
+
+      var cx = (x0 + x1) / 2;
+      var cy = (y0 + y1) / 2;
+      setScale(k, 50 - k * cx, 50 - k * cy);
+
+      current = pin.dataset.country;
+      frame.setAttribute('data-zoom', 'in');
+      markFocus(current);
+      // 等縮放動畫跑完再量，否則量到的是動畫中途的位置
+      window.setTimeout(declutter, 480);
+      if (where) {
+        where.innerHTML =
+          '<b class="travel-map__country"></b><span class="travel-map__dates"></span>';
+        where.querySelector('.travel-map__country').textContent = pin.dataset.name;
+        where.querySelector('.travel-map__dates').textContent = pin.dataset.summary;
+      }
+      if (bar) bar.hidden = false;
+      return true;
+    }
+
+    figure.addEventListener('click', function (e) {
+      if (back && e.target.closest('.travel-map__back')) {
+        reset();
+        return;
+      }
+      var pin = e.target.closest('.travel-pin');
+      if (!pin) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (current === pin.dataset.country) reset();
+      else zoomTo(pin);
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && current) reset();
+    });
+
+    setScale(1, 0, 0);
+  })();
+
   // 旅遊地圖的圖釘：桌機移過去就顯示，手機沒有 hover，所以點一下才展開。
   // 同時只開一張卡，靠近邊緣時自動往內翻，才不會被切掉。
   (function () {
@@ -1206,6 +1405,8 @@ const BEHAVIOUR_SCRIPT = `<script>
     }
 
     document.addEventListener('click', function (e) {
+      var frame = document.querySelector('.travel-map__frame');
+      if (frame && frame.getAttribute('data-zoom') === 'in') return close();
       var pin = e.target.closest && e.target.closest('.travel-pin');
       if (!pin) return close();
       e.preventDefault();

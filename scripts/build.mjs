@@ -89,7 +89,7 @@ async function loadPages() {
  * 把區塊裡的 source 換成 content/ 底下的實際資料。
  * 時間軸這種會一直長的內容獨立成資料檔，頁面只要指名要哪一份就好。
  */
-function resolveData(page, { milestones, posts, podcast, books, travel, atlas, cityAtlas }) {
+function resolveData(page, { milestones, posts, podcast, books, travel, atlas, cityAtlas, majors }) {
   // 文章頁在 content 裡是「一篇文章」的形狀（標題、日期、內文節點），
   // 而不是區塊陣列 —— 寫文章的人不該去組版面。這裡把它展開成區塊。
   if (page.layout === 'post') {
@@ -185,6 +185,7 @@ function resolveData(page, { milestones, posts, podcast, books, travel, atlas, c
         return {
           ...ref,
           ...c,
+          majors: majors[String(c.code).toUpperCase()] ?? [],
           visits,
           lat: Number.isFinite(c.lat) ? c.lat : ref.lat,
           lng: Number.isFinite(c.lng) ? c.lng : ref.lng,
@@ -356,6 +357,7 @@ async function main() {
   const travel = (await readJson(path.join(CONTENT_DIR, 'travel.json'))) ?? { countries: [] };
   const atlas = ((await readJson(path.join(CONTENT_DIR, 'country-atlas.json'))) ?? {}).countries ?? {};
   const cityAtlas = ((await readJson(path.join(CONTENT_DIR, 'city-atlas.json'))) ?? {}).cities ?? {};
+  const majors = ((await readJson(path.join(CONTENT_DIR, 'major-cities.json'))) ?? {}).countries ?? {};
 
   // 1. 快照打底
   const hasSnapshot = await isNonEmptyDir(SNAPSHOT_DIR);
@@ -368,7 +370,7 @@ async function main() {
   // 2. 重寫版覆蓋（含由 podcast-index.json 自動產生的單集頁）
   const pages = [...(await loadPages()), ...episodePages(podcast)];
   for (const page of pages) {
-    await write(fileFromRoute(page.route), renderPage({ site, page: resolveData(page, { milestones, posts, podcast, books, travel, atlas, cityAtlas }) }));
+    await write(fileFromRoute(page.route), renderPage({ site, page: resolveData(page, { milestones, posts, podcast, books, travel, atlas, cityAtlas, majors }) }));
   }
 
   // 3. 設計系統與自備素材
