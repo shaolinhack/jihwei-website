@@ -439,14 +439,18 @@ a.card { text-decoration: none; color: inherit; }
   padding: 0;
   /* 世界視角要讓圖釘卡片往外長，所以不裁切；放大後才裁 */
 }
-.travel-map__frame[data-zoom='in'] { overflow: hidden; }
+.travel-map__frame[data-zoom='in'] { overflow: hidden; cursor: grab; }
+.travel-map__frame.is-dragging { cursor: grabbing; }
+/* 拖曳時不要選到文字；手機上保留垂直捲動，水平交給地圖 */
+.travel-map__frame[data-zoom='in'] .travel-map__scene { user-select: none; }
+.travel-map__frame { touch-action: pan-y; }
 
 /* 縮放的場景。地圖、城市點、圖釘都在裡面，一次 transform 推動，
    彼此的相對位置自動保持正確。 */
 .travel-map__scene {
   position: relative;
   transform-origin: 0 0;
-  transition: transform .45s cubic-bezier(.4, 0, .2, 1);
+  /* transition 由 JS 控制：飛到某國時要動畫，拖曳與滾輪要即時跟手 */
   --inv: 1;
 }
 
@@ -523,14 +527,14 @@ a.card { text-decoration: none; color: inherit; }
 }
 .travel-city--been .travel-city__name { color: var(--blue); font-weight: 600; }
 
-/* 世界視角：只看得到去過的小點，沒去過的藏起來（否則整張圖會是灰點海） */
+/* 縮得小的時候只看得到去過的小點，沒去過的藏起來（否則整張圖會是灰點海）；
+   放大到一定倍率才把所有城市與名稱放出來。 */
 .travel-city { transition: opacity .3s; }
-.travel-map__frame[data-zoom='out'] .travel-city:not(.travel-city--been) { opacity: 0; }
+.travel-map__frame[data-detail='0'] .travel-city:not(.travel-city--been) { opacity: 0; }
+.travel-map__frame[data-detail='1'] .travel-city__name { opacity: 1; }
 
-/* 放大後：聚焦國家的城市標出名稱，其餘國家的點淡出讓路 */
-.travel-map__frame[data-zoom='in'] .travel-city:not(.travel-city--focus) { opacity: .12; }
+/* 飛到某個國家時，那一國的圖釘收起來 —— 它就站在國土中央，會擋住城市 */
 .travel-pin--focus { opacity: 0; pointer-events: none; }
-.travel-city--focus .travel-city__name { opacity: 1; }
 /* 避讓：下方放不下就試上方、右側、左側，四個都撞到就只留小點 */
 .travel-city--above .travel-city__name { top: auto; bottom: 100%; margin: 0 0 2px; }
 .travel-city--right .travel-city__name {
@@ -541,8 +545,9 @@ a.card { text-decoration: none; color: inherit; }
   top: 50%; left: auto; right: 100%; margin: 0 4px 0 0;
   transform: translateY(-50%);
 }
-.travel-city--muted .travel-city__name { opacity: 0; }
-.travel-city--focus .travel-city__dot { width: 6px; height: 6px; }
+/* 避讓判定擺不下的，名稱收起來，只留小點 */
+.travel-map__frame .travel-city--muted .travel-city__name { opacity: 0; }
+.travel-map__frame[data-detail='1'] .travel-city__dot { width: 6px; height: 6px; }
 
 /* ── 圖釘 ── */
 
@@ -617,11 +622,31 @@ a.card { text-decoration: none; color: inherit; }
 
 /* ── 國家清單 ── */
 
+/* 洲別篩選按鈕 */
+.travel-tabs {
+  display: flex; flex-wrap: wrap; gap: var(--space-2);
+  margin-top: var(--space-7);
+}
+.travel-tab {
+  display: inline-flex; align-items: baseline; gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font: inherit; font-size: .875rem; color: var(--text-muted);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border); border-radius: 999px;
+  cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+}
+.travel-tab:hover { color: var(--text); border-color: var(--blue-line); }
+.travel-tab.is-on {
+  color: var(--invert-text); background: var(--invert-bg); border-color: transparent;
+}
+.travel-tab__count { font-size: .75rem; opacity: .7; font-variant-numeric: tabular-nums; }
+
 /* 洲別分段 */
 .travel-groups {
-  list-style: none; margin: var(--space-7) 0 0; padding: 0;
+  list-style: none; margin: var(--space-5) 0 0; padding: 0;
   display: grid; gap: var(--space-7);
 }
+.travel-group[hidden] { display: none; }
 .travel-group__name {
   display: flex; align-items: baseline; gap: var(--space-3);
   margin: 0 0 var(--space-4);
