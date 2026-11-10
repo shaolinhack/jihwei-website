@@ -574,6 +574,21 @@ const blocks = {
 
     const lastStart = (c) => String(trips(c).at(-1)?.start ?? '');
 
+    /**
+     * 一個國家走過的所有城市，去重後依首次造訪的順序排列。
+     * 同一座城市去過好幾趟只列一次 —— 重複的地名在清單上沒有新資訊，
+     * 「哪一趟去的」則由上方各自獨立的日期承擔。
+     */
+    const placesOf = (c) => {
+      const seen = new Map();
+      for (const v of trips(c)) {
+        for (const city of toArray(v.cities)) {
+          if (!seen.has(city.name)) seen.set(city.name, city);
+        }
+      }
+      return [...seen.values()];
+    };
+
     const latest = visits
       .map((v) => v.start)
       .filter(Boolean)
@@ -619,15 +634,13 @@ const blocks = {
         const wish = !list.length;
         const summary = wish ? '想去' : list.map(dateRange).join('、');
 
-        const detail = list
-          .map((v) => {
-            const cities = toArray(v.cities).map((city) => city.name).join('、');
-            return `<span class="travel-pin__trip">
-            <span class="travel-pin__when">${escapeHtml(dateRange(v))}</span>
-            ${cities ? `<span class="travel-pin__where">${escapeHtml(cities)}</span>` : ''}
-          </span>`;
-          })
-          .join('');
+        const places = placesOf(c).map((city) => city.name).join('、');
+        const detail = list.length
+          ? list
+              .map((v) => `<span class="travel-pin__when">${escapeHtml(dateRange(v))}</span>`)
+              .join('') +
+            (places ? `<span class="travel-pin__where">${escapeHtml(places)}</span>` : '')
+          : '';
 
         return `<button type="button" class="travel-pin${wish ? ' travel-pin--wish' : ''}"
         id="pin-${index}" style="--x:${pos.x.toFixed(3)}%;--y:${pos.y.toFixed(3)}%"
@@ -647,26 +660,32 @@ const blocks = {
     const rows = [...visited]
       .sort((a, z) => lastStart(z).localeCompare(lastStart(a)))
       .map((c) => {
-        const inner = trips(c)
+        const when = [...trips(c)]
           .reverse()
-          .map((v) => {
-            const cities = toArray(v.cities).map((city) => city.name).join('、');
-            return `<li class="travel-trip">
-            <span class="travel-trip__when">${escapeHtml(dateRange(v))}</span>
-            <span class="travel-trip__where">${cities ? escapeHtml(cities) : ''}</span>
-          </li>`;
-          })
-          .join('\n          ');
+          .map((v) => `<li class="travel-when">${escapeHtml(dateRange(v))}</li>`)
+          .join('\n            ');
+
+        const places = placesOf(c)
+          .map((city) => `<li class="travel-place">${escapeHtml(city.name)}</li>`)
+          .join('\n            ');
+
+        const times = trips(c).length;
 
         return `<li class="travel-list__item reveal">
         <span class="travel-list__head">
           <span class="travel-list__flag" aria-hidden="true">${flag(c.code)}</span>
           <span class="travel-list__name">${escapeHtml(c.name)}${c.en ? `<span class="travel-list__en">${escapeHtml(c.en)}</span>` : ''}</span>
+          ${times > 1 ? `<span class="travel-list__times">去過 ${times} 次</span>` : ''}
           ${c.note ? `<span class="travel-list__note">${escapeHtml(c.note)}</span>` : ''}
         </span>
-        <ol class="travel-trips">
-          ${inner}
-        </ol>
+        <div class="travel-detail">
+          <ol class="travel-whens">
+            ${when}
+          </ol>
+          <ul class="travel-places">
+            ${places}
+          </ul>
+        </div>
       </li>`;
       })
       .join('\n      ');

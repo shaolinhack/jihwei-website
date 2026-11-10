@@ -518,10 +518,14 @@ a.card { text-decoration: none; color: inherit; }
 .travel-pin--flip-right .travel-pin__card { left: auto; right: 0; transform: translateX(0) translateY(0); }
 
 .travel-pin__name  { font-weight: 600; margin-bottom: 2px; }
-.travel-pin__trip  { display: grid; gap: 1px; }
-.travel-pin__trip + .travel-pin__trip { margin-top: var(--space-2); }
-.travel-pin__when  { color: var(--invert-text); font-variant-numeric: tabular-nums; }
-.travel-pin__where { color: var(--invert-muted); }
+.travel-pin__when  {
+  display: block; color: var(--invert-text);
+  font-variant-numeric: tabular-nums;
+}
+.travel-pin__where {
+  display: block; color: var(--invert-muted);
+  margin-top: var(--space-2);
+}
 .travel-pin__note  { color: var(--invert-muted); margin-top: 2px; }
 
 .travel-map__caption,
@@ -550,21 +554,38 @@ a.card { text-decoration: none; color: inherit; }
 .travel-list__body { display: grid; gap: 2px; min-width: 0; }
 .travel-list__name { font-weight: 600; }
 
-/* 一個國家底下，一趟行程一行 */
-.travel-trips { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
-.travel-trip {
+.travel-list__times {
+  font-size: .75rem; color: var(--blue);
+  background: var(--blue-wash); border-radius: 999px;
+  padding: 2px var(--space-3);
+}
+
+/* 一個國家底下：左邊是每趟的出國日期，右邊是走過的地方（去重後集中） */
+.travel-detail {
   display: grid;
-  grid-template-columns: minmax(10.5rem, auto) 1fr;
-  gap: var(--space-2) var(--space-4);
-  align-items: baseline;
-  padding-top: var(--space-2);
+  grid-template-columns: minmax(10rem, max-content) 1fr;
+  gap: var(--space-3) var(--space-5);
+  align-items: start;        /* 兩欄各自貼齊頂端，不互相撐高 */
+  padding-top: var(--space-3);
   border-top: 1px solid var(--border);
 }
-.travel-trip__when {
-  color: var(--blue); font-size: .875rem; font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+
+.travel-whens { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.travel-when {
+  color: var(--blue); font-size: .875rem;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
 }
-.travel-trip__where { color: var(--text-muted); font-size: .875rem; }
+
+.travel-places {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: var(--space-2);
+  align-items: flex-start;   /* 標籤維持自身高度，不被整列拉長 */
+}
+.travel-place {
+  font-size: .8125rem; color: var(--text-muted);
+  background: var(--bg-inset); border-radius: 6px;
+  padding: 2px var(--space-3);
+}
 .travel-list__en {
   color: var(--text-muted); font-weight: 400;
   font-size: .8125rem; margin-left: var(--space-2);
@@ -573,7 +594,8 @@ a.card { text-decoration: none; color: inherit; }
 
 @media (max-width: 600px) {
   .travel-list__item { padding: var(--space-4); }
-  .travel-trip { grid-template-columns: 1fr; gap: 2px; }
+  .travel-detail { grid-template-columns: 1fr; gap: var(--space-3); }
+  .travel-whens { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
   .travel-pin { width: 32px; height: 32px; }
   .travel-pin__card { max-width: 58vw; }
   .travel-city { width: 4px; height: 4px; }
