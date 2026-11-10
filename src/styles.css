@@ -536,8 +536,24 @@ a.card { text-decoration: none; color: inherit; }
 
 /* ── 國家清單 ── */
 
-.travel-list {
+/* 洲別分段 */
+.travel-groups {
   list-style: none; margin: var(--space-7) 0 0; padding: 0;
+  display: grid; gap: var(--space-7);
+}
+.travel-group__name {
+  display: flex; align-items: baseline; gap: var(--space-3);
+  margin: 0 0 var(--space-4);
+  font-size: 1rem; font-weight: 600;
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--blue-line);
+}
+.travel-group__count {
+  font-size: .8125rem; font-weight: 400; color: var(--text-muted);
+}
+
+.travel-list {
+  list-style: none; margin: 0; padding: 0;
   display: grid; gap: var(--space-2);
 }
 .travel-list__item {
