@@ -586,6 +586,14 @@ a.card { text-decoration: none; color: inherit; }
   background: var(--bg-inset); border-radius: 6px;
   padding: 2px var(--space-3);
 }
+
+.travel-spots-wrap { display: grid; gap: var(--space-3); min-width: 0; }
+
+/* 景點只列文字，不佔地圖版面 */
+.travel-spots {
+  margin: 0; font-size: .8125rem; line-height: 1.7;
+  color: var(--text-muted);
+}
 .travel-list__en {
   color: var(--text-muted); font-weight: 400;
   font-size: .8125rem; margin-left: var(--space-2);

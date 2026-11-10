@@ -579,6 +579,14 @@ const blocks = {
      * 同一座城市去過好幾趟只列一次 —— 重複的地名在清單上沒有新資訊，
      * 「哪一趟去的」則由上方各自獨立的日期承擔。
      */
+    const spotsOf = (c) => {
+      const seen = new Set();
+      for (const name of [...toArray(c.spots), ...trips(c).flatMap((v) => toArray(v.spots))]) {
+        if (name) seen.add(String(name));
+      }
+      return [...seen];
+    };
+
     const placesOf = (c) => {
       const seen = new Map();
       for (const v of trips(c)) {
@@ -669,6 +677,10 @@ const blocks = {
           .map((city) => `<li class="travel-place">${escapeHtml(city.name)}</li>`)
           .join('\n            ');
 
+        // 景點只列文字 —— 同一座城市裡的寺廟、商場、樂園彼此相距不過幾公里，
+        // 在世界地圖的尺度下畫不出差別，硬標只會疊成一點。
+        const spots = spotsOf(c);
+
         const times = trips(c).length;
 
         return `<li class="travel-list__item reveal">
@@ -682,9 +694,12 @@ const blocks = {
           <ol class="travel-whens">
             ${when}
           </ol>
-          <ul class="travel-places">
-            ${places}
-          </ul>
+          <div class="travel-spots-wrap">
+            <ul class="travel-places">
+              ${places}
+            </ul>
+            ${spots.length ? `<p class="travel-spots">${escapeHtml(spots.join('、'))}</p>` : ''}
+          </div>
         </div>
       </li>`;
       })
