@@ -662,10 +662,8 @@ const blocks = {
       .filter(Boolean)
       .join('\n      ');
 
-    // 國家清單，依最近一次造訪由新到舊；每趟行程各自一行，帶完整日期與城市
-    const rows = [...visited]
-      .sort((a, z) => lastStart(z).localeCompare(lastStart(a)))
-      .map((c) => {
+    // 國家清單，依洲分段；段內依最近一次造訪由新到舊
+    const countryRow = ((c) => {
         const when = [...trips(c)]
           .reverse()
           .map((v) => `<li class="travel-when">${escapeHtml(dateRange(v))}</li>`)
@@ -699,6 +697,39 @@ const blocks = {
             ${spots.length ? `<p class="travel-spots">${escapeHtml(spots.join('、'))}</p>` : ''}
           </div>
         </div>
+      </li>`;
+    });
+
+    // 洲別的排列順序：先放去過最多國家的，數量相同時依固定順序，輸出才穩定
+    const CONTINENT_ORDER = ['亞洲', '歐洲', '大洋洲', '北美洲', '南美洲', '非洲', '南極洲'];
+
+    const byContinent = new Map();
+    for (const c of visited) {
+      const key = c.continent || '其他';
+      if (!byContinent.has(key)) byContinent.set(key, []);
+      byContinent.get(key).push(c);
+    }
+
+    const rows = [...byContinent.entries()]
+      .sort((a, z) => {
+        if (z[1].length !== a[1].length) return z[1].length - a[1].length;
+        const ia = CONTINENT_ORDER.indexOf(a[0]);
+        const iz = CONTINENT_ORDER.indexOf(z[0]);
+        return (ia < 0 ? 99 : ia) - (iz < 0 ? 99 : iz);
+      })
+      .map(([name, list]) => {
+        const items = [...list]
+          .sort((a, z) => lastStart(z).localeCompare(lastStart(a)))
+          .map(countryRow)
+          .join('\n        ');
+
+        return `<li class="travel-group">
+        <h3 class="travel-group__name">
+          ${escapeHtml(name)}<span class="travel-group__count">${list.length} 國</span>
+        </h3>
+        <ol class="travel-list">
+          ${items}
+        </ol>
       </li>`;
       })
       .join('\n      ');
@@ -736,7 +767,7 @@ const blocks = {
       ${b.caption ? `<figcaption class="travel-map__caption">${inline(b.caption)}</figcaption>` : ''}
     </figure>
 
-    ${rows ? `<ol class="travel-list">
+    ${rows ? `<ol class="travel-groups">
       ${rows}
     </ol>` : ''}
     ${b.note ? `<p class="travel-map__note">${inline(b.note)}</p>` : ''}
