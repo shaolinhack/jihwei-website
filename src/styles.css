@@ -427,7 +427,7 @@ a.card { text-decoration: none; color: inherit; }
 }
 .travel-stats__item span { font-size: .875rem; color: var(--text-muted); }
 
-.travel-map { margin: var(--space-7) 0 0; }
+.travel-map { margin: var(--space-7) 0 0; position: relative; }
 
 .travel-map__frame {
   position: relative;
@@ -437,8 +437,47 @@ a.card { text-decoration: none; color: inherit; }
   /* 不留內距：圖釘用純百分比定位，容器一旦有內距就得在 calc 裡混算，
      而 calc 內的百分比相乘不是每個瀏覽器都支援。 */
   padding: 0;
-  /* 圖釘的卡片會往外長，所以不能 overflow:hidden */
+  /* 世界視角要讓圖釘卡片往外長，所以不裁切；放大後才裁 */
 }
+.travel-map__frame[data-zoom='in'] { overflow: hidden; }
+
+/* 縮放的場景。地圖、城市點、圖釘都在裡面，一次 transform 推動，
+   彼此的相對位置自動保持正確。 */
+.travel-map__scene {
+  position: relative;
+  transform-origin: 0 0;
+  transition: transform .45s cubic-bezier(.4, 0, .2, 1);
+  --inv: 1;
+}
+
+/* 放大後的資訊列。世界視角由圖釘卡片負責，放大後卡片會被裁掉，改由它接手。 */
+.travel-map__bar {
+  position: absolute; left: var(--space-4); right: var(--space-4); top: var(--space-4);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  background: var(--invert-bg); color: var(--invert-text);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  font-size: .875rem;
+}
+/* display:flex 會蓋過瀏覽器對 [hidden] 的預設 display:none，必須自己補 */
+.travel-map__bar[hidden] { display: none; }
+
+.travel-map__where {
+  font-variant-numeric: tabular-nums;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.travel-map__country { font-weight: 600; }
+.travel-map__dates { margin-left: var(--space-3); opacity: .85; }
+.travel-map__back {
+  flex: none; cursor: pointer;
+  padding: 2px var(--space-3);
+  font: inherit; color: var(--invert-text);
+  background: transparent;
+  border: 1px solid currentColor; border-radius: 999px;
+  opacity: .75;
+}
+.travel-map__back:hover { opacity: 1; }
 
 .travel-map__base { display: block; width: 100%; height: auto; border-radius: inherit; }
 .travel-map__land path {
@@ -459,12 +498,51 @@ a.card { text-decoration: none; color: inherit; }
   position: absolute;
   left: var(--x);
   top: var(--y);
-  transform: translate(-50%, -50%);
-  width: 5px; height: 5px; border-radius: 50%;
-  background: var(--blue);
-  opacity: .55;
+  /* 反向縮放：地圖放大時，點與字維持原本大小 */
+  transform: translate(-50%, -50%) scale(var(--inv, 1));
+  display: grid; justify-items: center; gap: 2px;
   pointer-events: none;
 }
+
+.travel-city__dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--text-muted);
+  opacity: .5;
+}
+.travel-city--been .travel-city__dot { background: var(--blue); opacity: 1; }
+
+/* 城市名稱只在放大到該國時出現 —— 世界視角擠不下，也沒必要 */
+.travel-city__name {
+  position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%);
+  margin-top: 1px;
+  font-size: 11px; line-height: 1.2; white-space: nowrap;
+  color: var(--text-muted);
+  text-shadow: 0 0 3px var(--bg), 0 0 3px var(--bg), 0 0 2px var(--bg);
+  opacity: 0; transition: opacity .25s;
+}
+.travel-city--been .travel-city__name { color: var(--blue); font-weight: 600; }
+
+/* 世界視角：只看得到去過的小點，沒去過的藏起來（否則整張圖會是灰點海） */
+.travel-city { transition: opacity .3s; }
+.travel-map__frame[data-zoom='out'] .travel-city:not(.travel-city--been) { opacity: 0; }
+
+/* 放大後：聚焦國家的城市標出名稱，其餘國家的點淡出讓路 */
+.travel-map__frame[data-zoom='in'] .travel-city:not(.travel-city--focus) { opacity: .12; }
+.travel-pin--focus { opacity: 0; pointer-events: none; }
+.travel-city--focus .travel-city__name { opacity: 1; }
+/* 避讓：下方放不下就試上方、右側、左側，四個都撞到就只留小點 */
+.travel-city--above .travel-city__name { top: auto; bottom: 100%; margin: 0 0 2px; }
+.travel-city--right .travel-city__name {
+  top: 50%; left: 100%; margin: 0 0 0 4px;
+  transform: translateY(-50%);
+}
+.travel-city--left .travel-city__name {
+  top: 50%; left: auto; right: 100%; margin: 0 4px 0 0;
+  transform: translateY(-50%);
+}
+.travel-city--muted .travel-city__name { opacity: 0; }
+.travel-city--focus .travel-city__dot { width: 6px; height: 6px; }
 
 /* ── 圖釘 ── */
 
@@ -473,7 +551,8 @@ a.card { text-decoration: none; color: inherit; }
   /* --x/--y 由建置時的經緯度換算寫入，直接就是百分比 */
   left: var(--x);
   top: var(--y);
-  transform: translate(-50%, -50%);
+  /* 反向縮放：地圖放大時圖釘維持原本大小，否則會脹成一塊紅斑 */
+  transform: translate(-50%, -50%) scale(var(--inv, 1));
   width: 26px; height: 26px; padding: 0;
   display: grid; place-items: center;
   background: none; border: 0; cursor: pointer;
@@ -508,6 +587,8 @@ a.card { text-decoration: none; color: inherit; }
   font-size: .8125rem; line-height: 1.5; text-align: left;
   opacity: 0; visibility: hidden;
   transition: opacity .15s, transform .15s, visibility .15s;
+  /* 卡片只是說明，不該擋住圖釘本身的點擊 */
+  pointer-events: none;
 }
 .travel-pin:hover .travel-pin__card,
 .travel-pin[aria-expanded="true"] .travel-pin__card {
@@ -617,6 +698,13 @@ a.card { text-decoration: none; color: inherit; }
 .travel-list__note { color: var(--text-muted); font-size: .875rem; }
 
 @media (max-width: 600px) {
+  /* 手機的地圖本來就只有一百多像素高，資訊列蓋上去等於整張圖都看不到 */
+  .travel-map__bar {
+    position: static; margin-top: var(--space-3);
+    border-radius: var(--radius);
+  }
+  .travel-map__dates { display: none; }
+
   .travel-list__item { padding: var(--space-4); }
   .travel-detail { grid-template-columns: 1fr; gap: var(--space-3); }
   .travel-whens { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
