@@ -739,7 +739,7 @@ const blocks = {
       byContinent.get(key).push(c);
     }
 
-    const rows = [...byContinent.entries()]
+    const groups = [...byContinent.entries()]
       .sort((a, z) => {
         if (z[1].length !== a[1].length) return z[1].length - a[1].length;
         const ia = CONTINENT_ORDER.indexOf(a[0]);
@@ -752,16 +752,32 @@ const blocks = {
           .map(countryRow)
           .join('\n        ');
 
-        return `<li class="travel-group">
+        return {
+          name,
+          count: list.length,
+          html: `<li class="travel-group" data-continent="${escapeHtml(name)}">
         <h3 class="travel-group__name">
           ${escapeHtml(name)}<span class="travel-group__count">${list.length} 國</span>
         </h3>
         <ol class="travel-list">
           ${items}
         </ol>
-      </li>`;
-      })
-      .join('\n      ');
+      </li>`,
+        };
+      });
+
+    const rows = groups.map((g) => g.html).join('\n      ');
+
+    // 洲別篩選。只有一個洲時按鈕沒有意義，就不放。
+    const tabs =
+      groups.length > 1
+        ? [{ name: '全部', count: visited.length }, ...groups]
+            .map((g, i) => `<button type="button" class="travel-tab${i === 0 ? ' is-on' : ''}"
+            data-continent="${i === 0 ? '' : escapeHtml(g.name)}" aria-pressed="${i === 0}">
+            ${escapeHtml(g.name)}<span class="travel-tab__count">${g.count}</span>
+          </button>`)
+            .join('\n        ')
+        : '';
 
     const stats = [
       { value: visited.length, label: '個國家' },
@@ -801,6 +817,10 @@ const blocks = {
       </div>
       ${b.caption ? `<figcaption class="travel-map__caption">${inline(b.caption)}</figcaption>` : ''}
     </figure>
+
+    ${tabs ? `<div class="travel-tabs" role="group" aria-label="依洲別篩選">
+        ${tabs}
+    </div>` : ''}
 
     ${rows ? `<ol class="travel-groups">
       ${rows}
@@ -1215,63 +1235,70 @@ const BEHAVIOUR_SCRIPT = `<script>
     });
   })();
 
-  // 旅遊地圖的縮放：點國家圖釘就放大到那個國家，該國的城市會變大並標出名稱，
-  // 去過的上色、沒去過的灰色。整個場景用一次 transform 推上去 ——
-  // 圖釘與城市點都是百分比定位，所以縮放時彼此的相對位置自動吻合，
-  // 不必逐一重算座標。字與點則反向縮放，維持原本大小。
+  // 旅遊地圖的縮放與平移。滾輪縮放、拖曳平移、雙指捏合，點國家圖釘則直接飛到那個國家。
+  //
+  // 地圖、城市點、圖釘都在同一個 scene 裡，三者都是百分比定位，
+  // 所以只要推一次 transform，彼此的相對位置就自動吻合，不必逐一重算座標。
+  // 圖釘與城市點再反向縮放（--inv），放大後維持原本大小。
   (function () {
     var frame = document.querySelector('.travel-map__frame');
     if (!frame) return;
 
     var scene = frame.querySelector('.travel-map__scene');
+    if (!scene) return;
+
     var figure = frame.closest('.travel-map') || frame.parentNode;
     var bar = figure.querySelector('.travel-map__bar');
     var where = figure.querySelector('.travel-map__where');
-    var back = figure.querySelector('.travel-map__back');
-    if (!scene) return;
 
-    var MAX_ZOOM = 22;
-    var current = null;
+    var MIN_K = 1;
+    var MAX_K = 40;
+    var DETAIL_K = 2.2; // 放大到這個倍率才顯示沒去過的城市與城市名稱
 
-    function setScale(k, tx, ty) {
-      scene.style.transform = 'translate(' + tx + '%, ' + ty + '%) scale(' + k + ')';
-      // 子元素反向縮放，字級與點的大小才不會跟著放大
-      scene.style.setProperty('--inv', String(1 / k));
+    var k = 1;
+    var tx = 0; // 位移以「場景寬度的百分比」計
+    var ty = 0;
+
+    var cities = scene.querySelectorAll('.travel-city');
+    var pins = scene.querySelectorAll('.travel-pin');
+
+    function clamp(v, lo, hi) {
+      return v < lo ? lo : v > hi ? hi : v;
     }
 
-    var allCities = scene.querySelectorAll('.travel-city');
-    var allPins = scene.querySelectorAll('.travel-pin');
+    /** 放大後場景比框大，位移限制在「不要露出空白」的範圍內 */
+    function clampPan() {
+      var lo = 100 * (1 - k);
+      tx = clamp(tx, lo, 0);
+      ty = clamp(ty, lo, 0);
+    }
 
-    /** CSS 比不了「屬性值相等」，所以聚焦哪一國由這裡掛 class */
-    function markFocus(code) {
-      allCities.forEach(function (el) {
-        el.classList.toggle('travel-city--focus', !!code && el.dataset.country === code);
-      });
-      // 聚焦中的國家收起自己的圖釘 —— 它就站在國土中央，會擋住城市
-      allPins.forEach(function (el) {
-        el.classList.toggle('travel-pin--focus', !!code && el.dataset.country === code);
-      });
+    var declutterTimer = null;
+
+    function apply(animate) {
+      clampPan();
+      scene.style.transition = animate ? 'transform .45s cubic-bezier(.4,0,.2,1)' : 'none';
+      scene.style.transform = 'translate(' + tx + '%, ' + ty + '%) scale(' + k + ')';
+      scene.style.setProperty('--inv', String(1 / k));
+
+      frame.setAttribute('data-zoom', k > 1.02 ? 'in' : 'out');
+      frame.setAttribute('data-detail', k >= DETAIL_K ? '1' : '0');
+
+      window.clearTimeout(declutterTimer);
+      declutterTimer = window.setTimeout(declutter, animate ? 480 : 120);
     }
 
     /**
-     * 標籤避讓。關東那幾座城市彼此只差一個緯度，放大後名稱還是會疊在一起。
-     * 依序擺放：去過的城市優先，位置先試點的下方、再試上方，
-     * 兩個位置都和已擺好的標籤相撞就收起來 —— 地圖讀得清楚比列得齊全重要，
-     * 完整清單在下方本來就有。
+     * 標籤避讓。城市一多，名稱就會疊在一起。依序擺放：去過的優先，
+     * 位置依下、上、右、左四個方向試，四個都撞到就只留小點 ——
+     * 地圖讀得清楚比列得齊全重要，完整清單在下方本來就有。
      */
     function declutter() {
+      if (k < DETAIL_K) return;
+
+      var view = frame.getBoundingClientRect();
       var placed = [];
-      var focused = scene.querySelectorAll('.travel-city--focus');
-      if (!focused.length) return;
-
-      // 先全部還原，否則上一次的結果會影響這一次的量測
-      focused.forEach(function (el) {
-        el.classList.remove(
-          'travel-city--above', 'travel-city--right', 'travel-city--left', 'travel-city--muted'
-        );
-      });
-
-      var PAD = 5; // 標籤之間留一點空隙，純粹不重疊還是會擠在一起
+      var PAD = 5;
 
       function hits(r) {
         for (var i = 0; i < placed.length; i++) {
@@ -1286,18 +1313,32 @@ const BEHAVIOUR_SCRIPT = `<script>
         return false;
       }
 
-      // 去過的先擺，擺不下的才是沒去過的
-      var order = [].slice.call(focused).sort(function (a, z) {
+      var SPOTS = ['', 'travel-city--above', 'travel-city--right', 'travel-city--left'];
+
+      // 去過的先擺。全部先還原，否則上一輪的結果會影響這一輪的量測。
+      var order = [].slice.call(cities).sort(function (a, z) {
         return (z.classList.contains('travel-city--been') ? 1 : 0) -
                (a.classList.contains('travel-city--been') ? 1 : 0);
       });
 
-      // 四個候選位置：點的下方（預設）、上方、右側、左側
-      var SPOTS = ['', 'travel-city--above', 'travel-city--right', 'travel-city--left'];
+      order.forEach(function (el) {
+        SPOTS.forEach(function (cls) { if (cls) el.classList.remove(cls); });
+        el.classList.remove('travel-city--muted');
+      });
 
       order.forEach(function (el) {
         var label = el.querySelector('.travel-city__name');
         if (!label) return;
+
+        // 看不到的就不佔位置，否則框外的標籤會把框內的擠掉
+        var dot = el.getBoundingClientRect();
+        if (
+          dot.right < view.left || dot.left > view.right ||
+          dot.bottom < view.top || dot.top > view.bottom
+        ) {
+          el.classList.add('travel-city--muted');
+          return;
+        }
 
         for (var i = 0; i < SPOTS.length; i++) {
           SPOTS.forEach(function (cls) { if (cls) el.classList.remove(cls); });
@@ -1310,21 +1351,128 @@ const BEHAVIOUR_SCRIPT = `<script>
           }
         }
 
-        // 四個位置都撞到，就只留小點
         SPOTS.forEach(function (cls) { if (cls) el.classList.remove(cls); });
         el.classList.add('travel-city--muted');
       });
     }
 
     function reset() {
-      current = null;
-      frame.setAttribute('data-zoom', 'out');
-      markFocus(null);
-      setScale(1, 0, 0);
+      k = 1;
+      tx = 0;
+      ty = 0;
+      pins.forEach(function (el) { el.classList.remove('travel-pin--focus'); });
       if (bar) bar.hidden = true;
+      apply(true);
     }
 
-    function zoomTo(pin) {
+    /** 以框內某一點為錨點縮放，那一點底下的地方不會跑掉 */
+    function zoomAt(nextK, cx, cy) {
+      nextK = clamp(nextK, MIN_K, MAX_K);
+      if (nextK === k) return;
+
+      // 錨點目前對應到場景上的哪個位置
+      var px = (cx - tx / 100) / k;
+      var py = (cy - ty / 100) / k;
+
+      k = nextK;
+      tx = 100 * (cx - k * px);
+      ty = 100 * (cy - k * py);
+      apply(false);
+    }
+
+    // ── 滾輪 ──────────────────────────────────────────────
+    frame.addEventListener(
+      'wheel',
+      function (e) {
+        var out = e.deltaY > 0;
+
+        // 已經是世界視角還要再縮小，就把這次滾動讓給頁面 ——
+        // 否則游標停在地圖上時整頁都捲不動
+        if (out && k <= MIN_K + 0.001) return;
+
+        e.preventDefault();
+
+        var r = frame.getBoundingClientRect();
+        var cx = (e.clientX - r.left) / r.width;
+        var cy = (e.clientY - r.top) / r.height;
+
+        var factor = Math.exp(-e.deltaY * 0.0015);
+        zoomAt(k * factor, cx, cy);
+
+        if (k <= MIN_K + 0.001 && bar) bar.hidden = true;
+      },
+      { passive: false },
+    );
+
+    // ── 拖曳平移 ──────────────────────────────────────────
+    var dragging = false;
+    var lastX = 0;
+    var lastY = 0;
+    var moved = false;
+
+    frame.addEventListener('pointerdown', function (e) {
+      if (k <= MIN_K + 0.001) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      dragging = true;
+      moved = false;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      frame.setPointerCapture(e.pointerId);
+      frame.classList.add('is-dragging');
+    });
+
+    frame.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      var r = frame.getBoundingClientRect();
+      var dx = ((e.clientX - lastX) / r.width) * 100;
+      var dy = ((e.clientY - lastY) / r.height) * 100;
+      if (Math.abs(e.clientX - lastX) > 2 || Math.abs(e.clientY - lastY) > 2) moved = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      tx += dx;
+      ty += dy;
+      apply(false);
+    });
+
+    function endDrag(e) {
+      if (!dragging) return;
+      dragging = false;
+      frame.classList.remove('is-dragging');
+      try { frame.releasePointerCapture(e.pointerId); } catch (err) {}
+    }
+    frame.addEventListener('pointerup', endDrag);
+    frame.addEventListener('pointercancel', endDrag);
+
+    // ── 雙指捏合 ──────────────────────────────────────────
+    var pinchStart = 0;
+    var pinchK = 1;
+
+    function spread(t) {
+      var dx = t[0].clientX - t[1].clientX;
+      var dy = t[0].clientY - t[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    frame.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 2) return;
+      dragging = false;
+      pinchStart = spread(e.touches);
+      pinchK = k;
+    }, { passive: true });
+
+    frame.addEventListener('touchmove', function (e) {
+      if (e.touches.length !== 2 || !pinchStart) return;
+      e.preventDefault();
+      var r = frame.getBoundingClientRect();
+      var cx = ((e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left) / r.width;
+      var cy = ((e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top) / r.height;
+      zoomAt(pinchK * (spread(e.touches) / pinchStart), cx, cy);
+    }, { passive: false });
+
+    frame.addEventListener('touchend', function () { pinchStart = 0; }, { passive: true });
+
+    // ── 點國家圖釘：直接飛到那個國家 ──────────────────────
+    function flyTo(pin) {
       var x0 = parseFloat(pin.dataset.x0);
       var y0 = parseFloat(pin.dataset.y0);
       var x1 = parseFloat(pin.dataset.x1);
@@ -1333,22 +1481,19 @@ const BEHAVIOUR_SCRIPT = `<script>
 
       var w = Math.abs(x1 - x0);
       var h = Math.abs(y1 - y0);
-      var rect = frame.getBoundingClientRect();
-      if (!rect.width || !rect.height) return false;
 
       // 國界框換算成畫面比例後，取較受限的一軸決定倍率，留一成邊距
-      var k = Math.min(100 / Math.max(w, 0.4), 100 / Math.max(h, 0.4)) * 0.9;
-      k = Math.max(1.6, Math.min(MAX_ZOOM, k));
+      k = clamp(Math.min(100 / Math.max(w, 0.4), 100 / Math.max(h, 0.4)) * 0.9, 1.6, MAX_K);
 
-      var cx = (x0 + x1) / 2;
-      var cy = (y0 + y1) / 2;
-      setScale(k, 50 - k * cx, 50 - k * cy);
+      var cx = (x0 + x1) / 2 / 100;
+      var cy = (y0 + y1) / 2 / 100;
+      tx = 100 * (0.5 - k * cx);
+      ty = 100 * (0.5 - k * cy);
 
-      current = pin.dataset.country;
-      frame.setAttribute('data-zoom', 'in');
-      markFocus(current);
-      // 等縮放動畫跑完再量，否則量到的是動畫中途的位置
-      window.setTimeout(declutter, 480);
+      pins.forEach(function (el) {
+        el.classList.toggle('travel-pin--focus', el === pin);
+      });
+
       if (where) {
         where.innerHTML =
           '<b class="travel-map__country"></b><span class="travel-map__dates"></span>';
@@ -1356,27 +1501,57 @@ const BEHAVIOUR_SCRIPT = `<script>
         where.querySelector('.travel-map__dates').textContent = pin.dataset.summary;
       }
       if (bar) bar.hidden = false;
+
+      apply(true);
       return true;
     }
 
     figure.addEventListener('click', function (e) {
-      if (back && e.target.closest('.travel-map__back')) {
+      if (e.target.closest('.travel-map__back')) {
         reset();
         return;
       }
+      if (moved) return; // 剛剛是在拖曳，不是點擊
+
       var pin = e.target.closest('.travel-pin');
       if (!pin) return;
       e.preventDefault();
       e.stopPropagation();
-      if (current === pin.dataset.country) reset();
-      else zoomTo(pin);
+      flyTo(pin);
     });
 
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && current) reset();
+      if (e.key === 'Escape' && k > MIN_K) reset();
     });
 
-    setScale(1, 0, 0);
+    window.addEventListener('resize', function () {
+      window.clearTimeout(declutterTimer);
+      declutterTimer = window.setTimeout(declutter, 200);
+    });
+
+    apply(false);
+  })();
+  // 洲別篩選。「全部」不帶 data-continent，其餘各自對應一個洲。
+  (function () {
+    var tabs = document.querySelector('.travel-tabs');
+    if (!tabs) return;
+    var groups = document.querySelectorAll('.travel-group');
+
+    tabs.addEventListener('click', function (e) {
+      var btn = e.target.closest('.travel-tab');
+      if (!btn) return;
+
+      tabs.querySelectorAll('.travel-tab').forEach(function (b) {
+        var on = b === btn;
+        b.classList.toggle('is-on', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
+
+      var want = btn.dataset.continent;
+      groups.forEach(function (g) {
+        g.hidden = !!want && g.dataset.continent !== want;
+      });
+    });
   })();
 
   // 旅遊地圖的圖釘：桌機移過去就顯示，手機沒有 hover，所以點一下才展開。
