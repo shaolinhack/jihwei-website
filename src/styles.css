@@ -734,6 +734,8 @@ a.card { text-decoration: none; color: inherit; }
   .travel-detail { grid-template-columns: 1fr; gap: var(--space-3); }
   .travel-whens { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
   .travel-pin { width: 32px; height: 32px; }
+  /* 手機的地圖只有三百多像素寬，標籤用桌機的字級會把小國家整個蓋住 */
+  .travel-city__name { font-size: 9px; }
   .travel-pin__card { max-width: 58vw; }
   .travel-city { width: 4px; height: 4px; }
 }

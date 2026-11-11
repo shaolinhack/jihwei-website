@@ -678,7 +678,12 @@ const blocks = {
         id="pin-${index}" style="--x:${pos.x.toFixed(3)}%;--y:${pos.y.toFixed(3)}%"
         data-country="${escapeHtml(c.code)}"
         data-name="${escapeHtml(c.name)}"
-        data-summary="${escapeHtml(summary)}"${focus}
+        data-summary="${escapeHtml(summary)}"
+        data-brief="${escapeHtml(
+          list.length > 2
+            ? `去過 ${list.length} 次 · 最近 ${dateRange(list.at(-1))}`
+            : summary,
+        )}"${focus}
         aria-expanded="false" aria-label="${escapeHtml(`${c.name}，${summary}`)}">
         <span class="travel-pin__dot" aria-hidden="true"></span>
         <span class="travel-pin__card" role="tooltip">
@@ -1356,6 +1361,15 @@ const BEHAVIOUR_SCRIPT = `<script>
       });
     }
 
+    /**
+     * 自己縮放或拖曳之後，畫面已經不是當初點的那個國家了，
+     * 資訊列再掛著它的名字只會誤導 —— 清掉。
+     */
+    function clearFocus() {
+      pins.forEach(function (el) { el.classList.remove('travel-pin--focus'); });
+      if (bar) bar.hidden = true;
+    }
+
     function reset() {
       k = 1;
       tx = 0;
@@ -1398,8 +1412,7 @@ const BEHAVIOUR_SCRIPT = `<script>
 
         var factor = Math.exp(-e.deltaY * 0.0015);
         zoomAt(k * factor, cx, cy);
-
-        if (k <= MIN_K + 0.001 && bar) bar.hidden = true;
+        clearFocus();
       },
       { passive: false },
     );
@@ -1426,7 +1439,10 @@ const BEHAVIOUR_SCRIPT = `<script>
       var r = frame.getBoundingClientRect();
       var dx = ((e.clientX - lastX) / r.width) * 100;
       var dy = ((e.clientY - lastY) / r.height) * 100;
-      if (Math.abs(e.clientX - lastX) > 2 || Math.abs(e.clientY - lastY) > 2) moved = true;
+      if (Math.abs(e.clientX - lastX) > 2 || Math.abs(e.clientY - lastY) > 2) {
+        if (!moved) clearFocus();
+        moved = true;
+      }
       lastX = e.clientX;
       lastY = e.clientY;
       tx += dx;
@@ -1467,6 +1483,7 @@ const BEHAVIOUR_SCRIPT = `<script>
       var cx = ((e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left) / r.width;
       var cy = ((e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top) / r.height;
       zoomAt(pinchK * (spread(e.touches) / pinchStart), cx, cy);
+      clearFocus();
     }, { passive: false });
 
     frame.addEventListener('touchend', function () { pinchStart = 0; }, { passive: true });
@@ -1498,7 +1515,8 @@ const BEHAVIOUR_SCRIPT = `<script>
         where.innerHTML =
           '<b class="travel-map__country"></b><span class="travel-map__dates"></span>';
         where.querySelector('.travel-map__country').textContent = pin.dataset.name;
-        where.querySelector('.travel-map__dates').textContent = pin.dataset.summary;
+        where.querySelector('.travel-map__dates').textContent =
+          pin.dataset.brief || pin.dataset.summary;
       }
       if (bar) bar.hidden = false;
 
